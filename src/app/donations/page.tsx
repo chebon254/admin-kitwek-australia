@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Image as ImageIcon, X } from "lucide-react";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import Image from "next/image";
 
 const donationSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -175,9 +176,11 @@ export default function DonationsPage() {
                     />
                   </label>
                   {thumbnailPreview && (
-                    <img
+                    <Image
                       src={thumbnailPreview}
                       alt="Preview"
+                      height={80}
+                      width={80}
                       className="ml-4 h-20 w-20 object-cover rounded"
                     />
                   )}
@@ -210,9 +213,11 @@ export default function DonationsPage() {
             key={donation.id}
             className="bg-white rounded-lg shadow overflow-hidden"
           >
-            <img
+            <Image
               src={donation.thumbnail}
               alt={donation.title}
+              width={250}
+              height={192}
               className="w-full h-48 object-cover"
             />
             <div className="p-4">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@prisma/client';
 import { Mail } from 'lucide-react';
+import Image from 'next/image';
 
 export default function MembersPage() {
   const [members, setMembers] = useState<User[]>([]);
@@ -77,9 +78,11 @@ export default function MembersPage() {
                   <div className="flex items-center">
                     <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                       {member.profileImage ? (
-                        <img
+                        <Image
                           src={member.profileImage}
                           alt={member.name}
+                          height={40}
+                          width={40}
                           className="h-10 w-10 rounded-full"
                         />
                       ) : (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart3, Users, Calendar, Gift, MessageSquare } from "lucide-react";
+import { Users, Calendar, Gift, MessageSquare } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface DashboardStats {
@@ -11,8 +11,6 @@ interface DashboardStats {
   totalEvents: number;
   totalForums: number;
 }
-import { UserButton } from "@clerk/nextjs";
-import Link from "next/link";
 
 export default function Home() {
   const [stats, setStats] = useState<DashboardStats | null>(null);

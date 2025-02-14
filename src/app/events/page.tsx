@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Image as ImageIcon, X } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import Image from 'next/image';
 
 const eventSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -157,9 +158,11 @@ export default function EventsPage() {
                     />
                   </label>
                   {thumbnailPreview && (
-                    <img
+                    <Image
                       src={thumbnailPreview}
                       alt="Preview"
+                      height={80}
+                      width={80}
                       className="ml-4 h-20 w-20 object-cover rounded"
                     />
                   )}
@@ -204,9 +207,11 @@ export default function EventsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => (
           <div key={event.id} className="bg-white rounded-lg shadow overflow-hidden">
-            <img
+            <Image
               src={event.thumbnail}
               alt={event.title}
+              height={192}
+              width={250}
               className="w-full h-48 object-cover"
             />
             <div className="p-4">
