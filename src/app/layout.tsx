@@ -15,7 +15,7 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Admin | Kitwek Victoria",
+  title: "Kitwek Victoria - Strengthening the Kalenjin Community",
   description:
     "Kitwek Victoria fosters cultural preservation, social empowerment, and economic advancement for the Kalenjin community in Victoria, Australia. Join us in promoting heritage, education, and integration within Australian society.",
 };
