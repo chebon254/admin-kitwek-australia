@@ -48,8 +48,8 @@ export default async function EventsPage() {
           const paidAttendees = event.attendees.filter(a => a.paid).length;
           const now = new Date();
           const eventDate = new Date(event.date);
-          const isUpcoming = eventDate > now;
-          const isPast = eventDate < now;
+          // const isUpcoming = eventDate > now;
+          // const isPast = eventDate < now;
 
           return (
             <div key={event.id} className="bg-white rounded-lg shadow overflow-hidden">

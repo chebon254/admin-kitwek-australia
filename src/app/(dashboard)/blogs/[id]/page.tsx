@@ -4,12 +4,6 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 
-interface Props {
-  params: {
-    id: string;
-  };
-}
-
 export default async function BlogDetailPage({ params }: { params: { id: string } }) {
   const { userId } = await auth();
 

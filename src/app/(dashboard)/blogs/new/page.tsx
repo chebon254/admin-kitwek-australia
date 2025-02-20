@@ -9,7 +9,6 @@ import Image from "next/image";
 
 export default function NewBlogPage() {
   const router = useRouter();
-  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

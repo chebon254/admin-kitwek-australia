@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const { user } = useUser();
   const [name, setName] = useState("");
   const [image, setImage] = useState<File | null>(null);

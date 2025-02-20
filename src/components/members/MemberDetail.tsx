@@ -232,7 +232,7 @@ export default function MemberDetail({ member }: MemberProps) {
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-bold mb-4">Revoke Member Access</h3>
             <p className="text-gray-600 mb-4">
-              Please provide a reason for revoking this member's access. They will be unable to sign in or reset their password.
+              Please provide a reason for revoking this member&apos;s access. They will be unable to sign in or reset their password.
             </p>
             <textarea
               value={revokeReason}
