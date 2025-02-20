@@ -4,26 +4,21 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "postinstall": "prisma generate",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.744.0",
-    "@aws-sdk/s3-request-presigner": "^3.744.0",
-    "@clerk/nextjs": "^6.11.3",
-    "@hookform/resolvers": "^4.0.0",
-    "@prisma/client": "^6.3.1",
-    "clsx": "^2.1.1",
+    "@aws-sdk/client-s3": "^3.750.0",
+    "@clerk/nextjs": "^6.12.0",
+    "@prisma/client": "^6.4.0",
+    "aws-sdk": "^2.1692.0",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
     "nodemailer": "^6.10.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hook-form": "^7.54.2",
-    "tailwind-merge": "^3.0.1",
-    "zod": "^3.24.2"
+    "react-hot-toast": "^2.5.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

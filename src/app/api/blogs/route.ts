@@ -10,26 +10,21 @@ export async function POST(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { title, description, thumbnail, date, location, capacity, isPaid, price } = await req.json();
+    const { title, description, thumbnail, files } = await req.json();
 
-    const event = await prisma.event.create({
+    const blog = await prisma.blog.create({
       data: {
         title,
         description,
         thumbnail,
-        date: new Date(date),
-        location,
-        capacity,
-        isPaid,
-        price,
-        status: "UPCOMING",
+        files: files || [],
         adminId: userId,
       },
     });
 
-    return NextResponse.json(event);
+    return NextResponse.json(blog);
   } catch (error) {
-    console.error("[EVENTS_POST]", error);
+    console.error("[BLOGS_POST]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -42,17 +37,14 @@ export async function GET(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const events = await prisma.event.findMany({
+    const blogs = await prisma.blog.findMany({
       where: { adminId: userId },
-      include: {
-        attendees: true,
-      },
-      orderBy: { date: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(events);
+    return NextResponse.json(blogs);
   } catch (error) {
-    console.error("[EVENTS_GET]", error);
+    console.error("[BLOGS_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

@@ -1,91 +1,169 @@
-// This is your Prisma schema file
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model User {
-  id               String     @id @default(cuid())
-  name             String
-  email            String     @unique
-  phone            String
-  country          String
-  password         String
-  membershipStatus String     @default("INACTIVE")
-  stripeCustomerId String?
-  profileImage     String?    @default("")
-  bio             String?     @default("")
-  profession      String?     @default("")
-  twitter         String?     @default("")
-  instagram       String?     @default("")
-  facebook        String?     @default("")
-  youtube         String?     @default("")
-  linkedin        String?     @default("")
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  comments         Comment[]
-  donations        Donation[]
-
-  @@map("users")
+  id              String    @id @default(uuid())
+  email           String    @unique
+  username        String?   @unique
+  password        String?
+  firstName       String?
+  lastName        String?
+  bio             String?   @db.Text
+  profileImage    String?
+  membershipStatus String   @default("INACTIVE")
+  subscription    String    @default("Free")
+  revokeStatus    Boolean   @default(false)
+  revokeReason    String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  stripeCustomerId String?  @unique
 }
 
-model ForumPost {
-  id        String    @id @default(cuid())
-  title     String
-  content   String    @db.Text
+model AdminUser {
+  id            String    @id
+  email         String    @unique
+  name          String?
+  profileImage  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  blogs         Blog[]
+  events        Event[]
+  forums        Forum[]
+  donations     Donation[]
+  logs          AdminLog[]
+  notifications AdminNotification[]
+}
+
+model AdminLog {
+  id        String    @id @default(uuid())
+  adminId   String
+  action    String
+  details   String    @db.Text
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  comments  Comment[]
+  admin     AdminUser @relation(fields: [adminId], references: [id])
 
-  @@map("forum_posts")
+  @@index([adminId])
 }
 
-model Comment {
-  id         String    @id @default(cuid())
-  content    String    @db.Text
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  user       User      @relation(fields: [userId], references: [id])
-  userId     String
-  post       ForumPost @relation(fields: [postId], references: [id])
-  postId     String
+model AdminNotification {
+  id        String    @id @default(uuid())
+  adminId   String
+  type      String    // e.g., "NEW_USER", "NEW_DONATION", etc.
+  message   String    @db.Text
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  admin     AdminUser @relation(fields: [adminId], references: [id])
 
-  @@map("comments")
+  @@index([adminId])
 }
 
-enum EventTag {
-  MEMBER
-  GENERIC
-}
-
-model Event {
-  id          String    @id @default(cuid())
+model Blog {
+  id          String    @id @default(uuid())
   title       String
   description String    @db.Text
   thumbnail   String
-  tag         EventTag  // Use enum instead of array
+  files       Json?     // Array of file URLs
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  adminId     String
+  admin       AdminUser @relation(fields: [adminId], references: [id])
 
-  @@map("events")
+  @@index([adminId])
 }
 
+model Event {
+  id          String    @id @default(uuid())
+  title       String
+  description String    @db.Text
+  thumbnail   String
+  date        DateTime
+  location    String
+  capacity    Int       @default(0)
+  isPaid      Boolean   @default(false)
+  price       Float?
+  status      String    @default("UPCOMING") // UPCOMING, ONGOING, COMPLETED, CANCELLED
+  cancelReason String?  @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  adminId     String
+  admin       AdminUser @relation(fields: [adminId], references: [id])
+  attendees   EventAttendee[]
+
+  @@index([adminId])
+}
+
+model EventAttendee {
+  id          String   @id @default(uuid())
+  eventId     String
+  name        String
+  email       String
+  phone       String?
+  paid        Boolean  @default(false)
+  amount      Float?
+  createdAt   DateTime @default(now())
+  event       Event    @relation(fields: [eventId], references: [id])
+
+  @@index([eventId])
+}
+
+model Forum {
+  id          String    @id @default(uuid())
+  title       String
+  description String    @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  adminId     String
+  admin       AdminUser @relation(fields: [adminId], references: [id])
+  comments    ForumComment[]
+
+  @@index([adminId])
+}
+
+model ForumComment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  forumId   String
+  name      String
+  email     String
+  createdAt DateTime @default(now())
+  forum     Forum    @relation(fields: [forumId], references: [id])
+
+  @@index([forumId])
+}
 
 model Donation {
-  id          String   @id @default(cuid())
-  title       String
-  description String   @db.Text
+  id          String    @id @default(uuid())
+  name        String
+  description String    @db.Text
   thumbnail   String
-  amount      Float
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  goal        Float?    // Optional fundraising goal
+  endDate     DateTime? // Optional end date for the campaign
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  adminId     String
+  admin       AdminUser @relation(fields: [adminId], references: [id])
+  donors      Donor[]
 
-  @@map("donations")
+  @@index([adminId])
+}
+
+model Donor {
+  id         String   @id @default(uuid())
+  name       String
+  email      String
+  amount     Float
+  message    String?  @db.Text
+  anonymous  Boolean  @default(false)
+  donationId String
+  createdAt  DateTime @default(now())
+  donation   Donation @relation(fields: [donationId], references: [id])
+
+  @@index([donationId])
 }

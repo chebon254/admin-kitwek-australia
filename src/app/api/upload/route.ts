@@ -1,50 +1,27 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { auth } from '@clerk/nextjs/server';
+import { NextResponse } from "next/server";
+import { uploadImage } from '@/lib/digitalocean';
 
-export async function GET() {
+export async function POST(req: Request) {
   try {
-    const forums = await prisma.forumPost.findMany({
-      include: {
-        _count: {
-          select: { comments: true },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    const { userId } = await auth();
 
-    return NextResponse.json(forums);
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const formData = await req.formData();
+    const file = formData.get('file') as File;
+    const path = formData.get('path') as string;
+
+    if (!file || !path) {
+      return new NextResponse("File and path are required", { status: 400 });
+    }
+
+    const imageUrl = await uploadImage(file, path);
+    return NextResponse.json({ url: imageUrl });
   } catch (error) {
-    console.error('Error fetching forums:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch forums' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const data = await request.json();
-    const forum = await prisma.forumPost.create({
-      data: {
-        title: data.title,
-        content: data.content,
-      },
-      include: {
-        _count: {
-          select: { comments: true },
-        },
-      },
-    });
-
-    return NextResponse.json(forum);
-  } catch (error) {
-    console.error('Error creating forum:', error);
-    return NextResponse.json(
-      { error: 'Failed to create forum' },
-      { status: 500 }
-    );
+    console.error("[UPLOAD_ERROR]", error);
+    return new NextResponse(error instanceof Error ? error.message : "Upload failed", { status: 500 });
   }
 }
