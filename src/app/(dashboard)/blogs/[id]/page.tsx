@@ -4,7 +4,13 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function BlogDetailPage({ params }: { params: { id: string } }) {
+interface Props {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default async function BlogDetailPage({ params }: Props) {
   const { userId } = await auth();
 
   if (!userId) {
