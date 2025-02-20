@@ -4,21 +4,22 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 
-// Use the correct params type
-type Props = {
-  params: {
-    id: string;
-  }
+async function getParams(params: Promise<{ id: string }>) {
+  return await params;
 }
 
-export default async function BlogDetailPage({ params }: Props) {
+export default async function BlogDetailPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
   const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in");
   }
 
-  const { id } = params;
+  const { id } = await getParams(params);
   
   const blog = await prisma.blog.findUnique({
     where: { id },
