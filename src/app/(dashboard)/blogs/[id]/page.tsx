@@ -4,12 +4,8 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 
-interface BlogDetailPageProps {
-  params: { id: string };
-}
-
-export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
-  const { id } = params;
+export default async function BlogDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const id = (await params).id;
   const { userId } = await auth();
 
   if (!userId) {
@@ -17,7 +13,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   }
 
   const blog = await prisma.blog.findUnique({
-    where: { id: String(id) },
+    where: { id },
   });  
 
   if (!blog || blog.adminId !== userId) {
