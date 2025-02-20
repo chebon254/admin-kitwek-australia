@@ -3,7 +3,13 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import MemberDetail from "@/components/members/MemberDetail";
 
-export default async function MemberDetailPage({ params }: { params: { id: string } }) {
+interface Props {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default async function MemberDetailPage({ params }: Props) {
   const { userId } = await auth();
 
   if (!userId) {
