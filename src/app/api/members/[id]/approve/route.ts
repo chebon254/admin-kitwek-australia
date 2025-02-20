@@ -9,7 +9,7 @@ type RouteParams = {
 };
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: RouteParams
 ) {
   try {
