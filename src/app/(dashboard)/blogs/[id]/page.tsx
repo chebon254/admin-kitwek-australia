@@ -4,17 +4,17 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function BlogDetailPage(
-  props: { params: { id: string } }
-) {
-  const { params } = props;
+interface BlogDetailPageProps {
+  params: { id: string };
+}
+
+export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
+  const { id } = params;
   const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in");
   }
-
-  const { id } = params;
 
   const blog = await prisma.blog.findUnique({
     where: { id: String(id) },
