@@ -6,9 +6,9 @@ import Link from "next/link";
 import { Calendar, Clock, MapPin, Users, AlertTriangle } from "lucide-react";
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function EventDetailPage({ params }: Props) {

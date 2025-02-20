@@ -5,9 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function DonationDetailPage({ params }: Props) {

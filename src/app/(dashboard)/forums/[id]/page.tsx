@@ -5,9 +5,9 @@ import Link from "next/link";
 import { MessageSquare, Users } from "lucide-react";
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ForumDetailPage({ params }: Props) {
