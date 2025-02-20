@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
   try {
     const { userId } = await auth();
 
@@ -13,8 +13,8 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { reason } = await req.json();
-    const { id } = params;
+    const { reason } = await request.json();
+    const { id } = await params;
 
     const user = await prisma.user.update({
       where: { id },
