@@ -1,31 +1,35 @@
 import { auth } from '@clerk/nextjs/server';
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from 'next/server';
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
 
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return Response.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    const { id } = params;
-
     const user = await prisma.user.update({
-      where: { id },
+      where: { id: params.id },
       data: {
         revokeStatus: false,
         revokeReason: null,
       },
     });
 
-    return NextResponse.json(user);
+    return Response.json(user);
   } catch (error) {
     console.error("[MEMBER_APPROVE]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return Response.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }

@@ -1,5 +1,5 @@
 import { auth } from '@clerk/nextjs/server';
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import nodemailer from 'nodemailer';
 import { prisma } from "@/lib/prisma";
 
@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -24,8 +24,7 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Await the params before using them
-    const { id } = await params;
+    const { id } = params;
 
     const user = await prisma.user.findUnique({
       where: { id },

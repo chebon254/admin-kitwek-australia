@@ -1,9 +1,9 @@
 import { auth } from '@clerk/nextjs/server';
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -14,8 +14,7 @@ export async function POST(
     }
 
     const { reason } = await req.json();
-
-    const { id } = await params;
+    const { id } = params;
 
     const user = await prisma.user.update({
       where: { id },
