@@ -13,7 +13,7 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ id:
   }
 
   const blog = await prisma.blog.findUnique({
-    where: { id },
+    where: { id: String(id) },
   });  
 
   if (!blog || blog.adminId !== userId) {
