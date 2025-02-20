@@ -18,7 +18,7 @@ export default async function BlogDetailPage({ params }:  Props) {
     redirect("/sign-in");
   }
 
-  const { id } = await params;
+  const id = (await params).id;
 
   const blog = await prisma.blog.findUnique({
     where: { id },
