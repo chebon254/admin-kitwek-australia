@@ -10,7 +10,7 @@ interface Props {
   }>;
 }
 
-export default async function BlogDetailPage({ params }:  Props) {
+export default async function BlogDetailPage({params}: Props) {
 
   const { userId } = await auth();
 
@@ -18,7 +18,7 @@ export default async function BlogDetailPage({ params }:  Props) {
     redirect("/sign-in");
   }
 
-  const id = (await params).id;
+  const { id } = await params;
 
   const blog = await prisma.blog.findUnique({
     where: { id },
