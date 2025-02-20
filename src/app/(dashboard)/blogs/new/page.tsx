@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";

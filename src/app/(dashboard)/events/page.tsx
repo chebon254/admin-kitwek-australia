@@ -46,8 +46,8 @@ export default async function EventsPage() {
             sum + (attendee.amount || 0), 0
           );
           const paidAttendees = event.attendees.filter(a => a.paid).length;
-          const now = new Date();
-          const eventDate = new Date(event.date);
+          // const now = new Date();
+          // const eventDate = new Date(event.date);
           // const isUpcoming = eventDate > now;
           // const isPast = eventDate < now;
 
