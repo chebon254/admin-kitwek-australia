@@ -5,11 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default async function BlogDetailPage(
-  props: { 
-    params: Promise<{ id: string }> 
-  }
+  props: { params: { id: string } }
 ) {
-  const params = await props.params;
+  const { params } = props;
   const { userId } = await auth();
 
   if (!userId) {
@@ -19,8 +17,8 @@ export default async function BlogDetailPage(
   const { id } = params;
 
   const blog = await prisma.blog.findUnique({
-    where: { id },
-  });
+    where: { id: String(id) },
+  });  
 
   if (!blog || blog.adminId !== userId) {
     redirect("/blogs");
