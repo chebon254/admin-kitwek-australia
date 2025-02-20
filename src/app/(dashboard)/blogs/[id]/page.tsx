@@ -4,14 +4,10 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 
-async function getParams(params: Promise<{ id: string }>) {
-  return await params;
-}
-
 export default async function BlogDetailPage({ 
   params 
 }: { 
-  params: Promise<{ id: string }> 
+  params: { id: string } 
 }) {
   const { userId } = await auth();
 
@@ -19,7 +15,7 @@ export default async function BlogDetailPage({
     redirect("/sign-in");
   }
 
-  const { id } = await getParams(params);
+  const { id } = params;
   
   const blog = await prisma.blog.findUnique({
     where: { id },
