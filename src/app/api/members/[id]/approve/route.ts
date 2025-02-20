@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -12,8 +13,7 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Await the params before using them
-    const { id } = await params;
+    const { id } = params; // No need to await params, it's already resolved
 
     const user = await prisma.user.update({
       where: { id },
