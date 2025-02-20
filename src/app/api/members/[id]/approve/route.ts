@@ -1,16 +1,10 @@
 import { auth } from '@clerk/nextjs/server';
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
 
 export async function POST(
   req: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
