@@ -4,13 +4,18 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 
-interface Props {
+// Define the params type correctly for Next.js pages
+interface BlogDetailPageProps {
   params: {
     id: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function BlogDetailPage({ params }: Props) {
+export default async function BlogDetailPage({ 
+  params,
+  searchParams 
+}: BlogDetailPageProps) {
   const { userId } = await auth();
 
   if (!userId) {
