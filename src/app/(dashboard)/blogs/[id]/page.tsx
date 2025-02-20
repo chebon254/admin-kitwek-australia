@@ -13,9 +13,7 @@ interface BlogDetailPageProps {
 }
 
 export default async function BlogDetailPage({ 
-  params,
-  searchParams 
-}: BlogDetailPageProps) {
+  params}: BlogDetailPageProps) {
   const { userId } = await auth();
 
   if (!userId) {
