@@ -5,9 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function BlogDetailPage({ params }: Props) {
@@ -17,7 +17,7 @@ export default async function BlogDetailPage({ params }: Props) {
     redirect("/sign-in");
   }
 
-  const { id } = params;
+  const { id } = await params;
   
   const blog = await prisma.blog.findUnique({
     where: { id },
