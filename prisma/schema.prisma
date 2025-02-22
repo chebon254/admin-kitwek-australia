@@ -16,6 +16,8 @@ model User {
   firstName       String?
   lastName        String?
   bio             String?   @db.Text
+  proffession     String?
+  phone           String?
   profileImage    String?
   membershipStatus String   @default("INACTIVE")
   subscription    String    @default("Free")

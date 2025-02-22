@@ -1,9 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { UserButton, SignOutButton } from "@clerk/nextjs";
-import { LogOut } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import UserDropdown from "@/components/Navbar/UserDropdown";
 
 export default async function DashboardLayout({
   children,
@@ -18,6 +17,12 @@ export default async function DashboardLayout({
 
   const adminUser = await prisma.adminUser.findUnique({
     where: { id: userId },
+    include: {
+      notifications: {
+        where: { read: false },
+        select: { id: true },
+      },
+    },
   });
 
   if (!adminUser?.name || !adminUser?.profileImage) {
@@ -73,13 +78,13 @@ export default async function DashboardLayout({
               </div>
             </div>
             <div className="flex items-center">
-              <UserButton afterSignOutUrl="/" />
-              <SignOutButton>
-                <button className="w-full p-3 flex items-center gap-2 text-sm hover:bg-blue-100 rounded-lg transition">
-                  <LogOut className="h-5 w-5" />
-                  Logout
-                </button>
-              </SignOutButton>
+              <UserDropdown
+                user={{
+                  name: adminUser.name,
+                  profileImage: adminUser.profileImage,
+                }}
+                unreadNotifications={adminUser.notifications.length}
+              />
             </div>
           </div>
         </div>
