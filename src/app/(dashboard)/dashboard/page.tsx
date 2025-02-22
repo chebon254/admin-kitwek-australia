@@ -5,6 +5,7 @@ import {
   Users, FileText, Calendar, MessageSquare, 
   DollarSign, TrendingUp, Activity, Clock
 } from "lucide-react";
+import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,6 +13,9 @@ export default async function DashboardPage() {
   const { userId } = await auth();
 
   if (!userId) {
+    const currentUrl = (await headers()).get("referer") || ""; // Get the referring URL
+
+    if (currentUrl.includes("/sign-in")) return null; // Prevent redirect loop
     redirect("/sign-in");
   }
 
