@@ -26,6 +26,7 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   stripeCustomerId String?  @unique
+  tickets         Ticket[]
 }
 
 model AdminUser {
@@ -81,38 +82,61 @@ model Blog {
 }
 
 model Event {
-  id          String    @id @default(uuid())
-  title       String
-  description String    @db.Text
-  thumbnail   String
-  date        DateTime
-  location    String
-  capacity    Int       @default(0)
-  isPaid      Boolean   @default(false)
-  price       Float?
-  status      String    @default("UPCOMING") // UPCOMING, ONGOING, COMPLETED, CANCELLED
-  cancelReason String?  @db.Text
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  adminId     String
-  admin       AdminUser @relation(fields: [adminId], references: [id])
-  attendees   EventAttendee[]
+  id            String    @id @default(uuid())
+  title         String
+  description   String    @db.Text
+  thumbnail     String
+  date          DateTime
+  location      String
+  capacity      Int       @default(0)
+  remainingSlots Int      @default(0)
+  isPaid        Boolean   @default(false)
+  price         Float?
+  status        String    @default("UPCOMING") // UPCOMING, ONGOING, COMPLETED, CANCELLED
+  cancelReason  String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  adminId       String
+  admin         AdminUser @relation(fields: [adminId], references: [id])
+  tickets       Ticket[]
+  attendees     EventAttendee[]
 
   @@index([adminId])
+}
+
+model Ticket {
+  id            String    @id @default(uuid())
+  eventId       String
+  event         Event     @relation(fields: [eventId], references: [id])
+  userId        String?   // Optional: for logged-in users
+  user          User?     @relation(fields: [userId], references: [id])
+  quantity      Int
+  totalAmount   Float
+  status        String    @default("ACTIVE") // ACTIVE, USED, CANCELLED, REFUNDED
+  purchaseDate  DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  attendees     EventAttendee[]
+
+  @@index([eventId])
+  @@index([userId])
 }
 
 model EventAttendee {
   id          String   @id @default(uuid())
   eventId     String
-  name        String
+  ticketId    String?  // Optional: for linking to ticket
+  event       Event    @relation(fields: [eventId], references: [id])
+  ticket      Ticket?  @relation(fields: [ticketId], references: [id])
+  firstName   String
+  lastName    String
   email       String
   phone       String?
   paid        Boolean  @default(false)
   amount      Float?
   createdAt   DateTime @default(now())
-  event       Event    @relation(fields: [eventId], references: [id])
 
   @@index([eventId])
+  @@index([ticketId])
 }
 
 model Forum {
