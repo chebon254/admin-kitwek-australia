@@ -42,6 +42,7 @@ export default function OnboardingPage() {
         imageUrl = await uploadFile(image, "admin-profiles");
         toast.dismiss(uploadToast);
       } catch (error) {
+        console.error("Error", error);
         toast.dismiss(uploadToast);
         toast.error("Failed to upload image");
         return;
