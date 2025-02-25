@@ -78,6 +78,7 @@ export default function OnboardingPage() {
             const jsonData = JSON.parse(responseData);
             errorMessage = jsonData.message || errorMessage;
           } catch (e) {
+            console.error("error", e);
             errorMessage = responseData || errorMessage;
           }
 
