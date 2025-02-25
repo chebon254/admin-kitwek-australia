@@ -20,6 +20,7 @@ export async function POST(req: Request) {
         date: new Date(date),
         location,
         capacity,
+        remainingSlots: capacity, // Initialize remainingSlots with capacity
         isPaid,
         price,
         status: "UPCOMING",

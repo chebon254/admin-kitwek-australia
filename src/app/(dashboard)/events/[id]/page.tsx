@@ -38,7 +38,6 @@ export default async function EventDetailPage({ params }: Props) {
   );
   const paidAttendees = event.attendees.filter(a => a.paid).length;
   const unpaidAttendees = event.attendees.length - paidAttendees;
-  const spotsLeft = event.capacity - event.attendees.length;
 
   return (
     <div className="space-y-6">
@@ -105,8 +104,8 @@ export default async function EventDetailPage({ params }: Props) {
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-gray-500" />
                   <div>
-                    <div className="text-sm font-medium text-gray-600">Capacity</div>
-                    <div>{event.capacity} spots</div>
+                    <div className="text-sm font-medium text-gray-600">Available Slots</div>
+                    <div>{event.remainingSlots} of {event.capacity}</div>
                   </div>
                 </div>
               </div>
@@ -144,7 +143,9 @@ export default async function EventDetailPage({ params }: Props) {
                 <tbody className="divide-y divide-gray-200">
                   {event.attendees.map((attendee) => (
                     <tr key={attendee.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{attendee.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {attendee.firstName} {attendee.lastName}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{attendee.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{attendee.phone || '-'}</td>
                       {event.isPaid && (
@@ -184,7 +185,7 @@ export default async function EventDetailPage({ params }: Props) {
                     <div className="text-sm text-gray-600">Total Registered</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">{spotsLeft}</div>
+                    <div className="text-2xl font-bold text-green-600">{event.remainingSlots}</div>
                     <div className="text-sm text-gray-600">Spots Left</div>
                   </div>
                 </div>
@@ -193,11 +194,11 @@ export default async function EventDetailPage({ params }: Props) {
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
                       <div
                         className="bg-blue-600 h-2.5 rounded-full"
-                        style={{ width: `${Math.min((event.attendees.length / event.capacity) * 100, 100)}%` }}
+                        style={{ width: `${Math.min(((event.capacity - event.remainingSlots) / event.capacity) * 100, 100)}%` }}
                       />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">
-                      {Math.round((event.attendees.length / event.capacity) * 100)}% capacity filled
+                      {Math.round(((event.capacity - event.remainingSlots) / event.capacity) * 100)}% capacity filled
                     </p>
                   </div>
                 )}
