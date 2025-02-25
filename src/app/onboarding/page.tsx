@@ -21,10 +21,10 @@ export default function OnboardingPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
-      
+
       if (!image) {
         toast.error("Please select a profile image");
         return;
@@ -37,12 +37,19 @@ export default function OnboardingPage() {
 
       // Upload image first
       const uploadToast = toast.loading("Uploading image...");
-      const imageUrl = await uploadFile(image, "admin-profiles");
-      toast.dismiss(uploadToast);
-      
+      let imageUrl;
+      try {
+        imageUrl = await uploadFile(image, "admin-profiles");
+        toast.dismiss(uploadToast);
+      } catch (error) {
+        toast.dismiss(uploadToast);
+        toast.error("Failed to upload image");
+        return;
+      }
+
       // Save profile
       const saveToast = toast.loading("Saving profile...");
-      
+
       try {
         // Update database first
         const response = await fetch("/api/onboarding", {
@@ -56,37 +63,66 @@ export default function OnboardingPage() {
           }),
         });
 
+        let responseData = "";
+        try {
+          responseData = await response.text();
+        } catch (e) {
+          console.error("Error reading response text:", e);
+        }
+
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || "Failed to save profile");
+          let errorMessage = "Failed to save profile";
+
+          try {
+            const jsonData = JSON.parse(responseData);
+            errorMessage = jsonData.message || errorMessage;
+          } catch (e) {
+            errorMessage = responseData || errorMessage;
+          }
+
+          throw new Error(errorMessage);
         }
 
         // Then update Clerk profile
         if (user) {
-          await Promise.all([
-            user.update({
-              firstName: name.trim().split(" ")[0],
-              lastName: name.trim().split(" ").slice(1).join(" "),
-            }),
-            user.setProfileImage({
-              file: image
-            })
-          ]);
+          const nameParts = name.trim().split(" ");
+          const firstName = nameParts[0];
+          const lastName = nameParts.slice(1).join(" ");
+
+          try {
+            // Update Clerk user data with correct parameter names
+            await user.update({
+              firstName: firstName,
+              lastName: lastName || undefined,
+            });
+
+            // Set profile image separately
+            await user.setProfileImage({
+              file: image,
+            });
+          } catch (clerkError) {
+            console.error("Error updating Clerk profile:", clerkError);
+            // Continue despite Clerk update error
+            // The user has been saved in the database, so we can proceed
+          }
         }
 
         toast.dismiss(saveToast);
         toast.success("Profile updated successfully");
-        
-        // Use router.push instead of window.location for better navigation
-        router.push("/dashboard");
+
+        // Add a small delay before redirecting to ensure state is updated
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 500);
       } catch (error) {
         toast.dismiss(saveToast);
         throw error;
       }
-
     } catch (error) {
       console.error("Onboarding error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to update profile");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update profile"
+      );
     } finally {
       setLoading(false);
     }
