@@ -34,7 +34,7 @@ export async function POST(
       return new NextResponse("User not found", { status: 404 });
     }
 
-    const activationLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/membership`;
+    const activationLink = `https://kitwekvictoria.org/dashboard/membership`;
     
     await transporter.sendMail({
       from: `"Kitwek Victoria Admin" <${process.env.SMTP_USER}>`,
