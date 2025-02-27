@@ -75,7 +75,7 @@ export async function POST(
                 display: inline-block;
                 padding: 12px 24px;
                 background-color: #4a90e2;
-                color: #ffffff;
+                color: #ffffff !important;
                 text-decoration: none;
                 border-radius: 4px;
                 margin: 20px 0;
@@ -101,7 +101,7 @@ export async function POST(
                 <p>Thank you for joining Kitwek Victoria. To complete your membership activation and access all member features, please click the button below:</p>
                 
                 <div style="text-align: center;">
-                  <a href="${activationLink}" class="button">Activate Membership</a>
+                  <a href="${activationLink}" class="button" style="color: #FFFFFF !important;">Activate Membership</a>
                 </div>
                 
                 <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
