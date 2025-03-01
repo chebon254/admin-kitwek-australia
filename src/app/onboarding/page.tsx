@@ -11,7 +11,10 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadAttempt, setUploadAttempt] = useState(0);
 
   useEffect(() => {
     if (user?.fullName) {
@@ -19,19 +22,43 @@ export default function OnboardingPage() {
     }
   }, [user?.fullName]);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size exceeds 5MB limit");
+        return;
+      }
+      
+      setImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       setLoading(true);
+      setUploadProgress(0);
+      setUploadAttempt(0);
 
       if (!image) {
         toast.error("Please select a profile image");
+        setLoading(false);
         return;
       }
 
       if (!name.trim()) {
         toast.error("Please enter your name");
+        setLoading(false);
         return;
       }
 
@@ -39,12 +66,32 @@ export default function OnboardingPage() {
       const uploadToast = toast.loading("Uploading image...");
       let imageUrl;
       try {
+        // Show progress indicator with slower progression
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            const newProgress = prev + 2; // Slower progress to account for longer upload time
+            return newProgress > 90 ? 90 : newProgress; // Cap at 90% until complete
+          });
+        }, 500);
+
+        // Track retry attempts
+        const attemptInterval = setInterval(() => {
+          setUploadAttempt(prev => prev + 1);
+        }, 10000); // Update attempt counter every 10 seconds
+
         imageUrl = await uploadFile(image, "admin-profiles");
+        
+        clearInterval(progressInterval);
+        clearInterval(attemptInterval);
+        setUploadProgress(100);
+        
         toast.dismiss(uploadToast);
+        toast.success("Image uploaded successfully");
       } catch (error) {
         console.error("Error", error);
         toast.dismiss(uploadToast);
-        toast.error("Failed to upload image");
+        toast.error(error instanceof Error ? error.message : "Failed to upload image");
+        setLoading(false);
         return;
       }
 
@@ -150,17 +197,48 @@ export default function OnboardingPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Profile Image
+              Profile Image (Max 5MB)
             </label>
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setImage(e.target.files?.[0] || null)}
-              className="w-full"
+              onChange={handleImageChange}
+              className="w-full mb-2"
               required
               disabled={loading}
             />
+            {imagePreview && (
+              <div className="mt-2 relative h-32 w-32 mx-auto rounded-full overflow-hidden border-2 border-gray-200">
+                <img 
+                  src={imagePreview} 
+                  alt="Profile preview" 
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              Recommended: Square image, max 5MB. Larger images will be automatically compressed.
+            </p>
           </div>
+          
+          {loading && uploadProgress > 0 && (
+            <div className="space-y-2">
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                {uploadProgress < 100 
+                  ? uploadAttempt > 0 
+                    ? `Uploading... (Attempt ${uploadAttempt})` 
+                    : 'Uploading...' 
+                  : 'Upload complete'}
+              </p>
+            </div>
+          )}
+          
           <button
             type="submit"
             disabled={loading}
