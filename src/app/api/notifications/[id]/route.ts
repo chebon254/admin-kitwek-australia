@@ -1,11 +1,11 @@
 import { auth } from '@clerk/nextjs/server';
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse> {
+) {
   try {
     const { userId } = await auth();
 
@@ -13,11 +13,9 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { id } = await params;
-
     const notification = await prisma.adminNotification.update({
       where: {
-        id: id,
+        id: (await params).id,
         adminId: userId,
       },
       data: {

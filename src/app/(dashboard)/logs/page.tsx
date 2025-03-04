@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import useSWR from 'swr';
 import { 
   AlertCircle, 
   Clock, 
@@ -16,6 +15,7 @@ import {
   RefreshCw,
   Loader2
 } from "lucide-react";
+import toast from 'react-hot-toast';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -26,22 +26,51 @@ interface Log {
   createdAt: string;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
-
 export default function LogsPage() {
   const [page, setPage] = useState(1);
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { ref, inView } = useInView();
 
-  const { data, error } = useSWR<{
-    logs: Log[];
-    hasMore: boolean;
-  }>(`/api/logs?page=${page}&limit=${ITEMS_PER_PAGE}`, fetcher);
+  const fetchLogs = async (pageNum: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/logs?page=${pageNum}&limit=${ITEMS_PER_PAGE}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch logs');
+      }
+      
+      const data = await response.json();
+      
+      if (pageNum === 1) {
+        setLogs(data.logs);
+      } else {
+        setLogs(prev => [...prev, ...data.logs]);
+      }
+      
+      setHasMore(data.hasMore);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching logs:', err);
+      setError('Failed to load logs');
+      toast.error('Failed to load logs');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (inView && data?.hasMore) {
+    fetchLogs(page);
+  }, [page]);
+
+  useEffect(() => {
+    if (inView && hasMore && !loading) {
       setPage(prev => prev + 1);
     }
-  }, [inView, data?.hasMore]);
+  }, [inView, hasMore, loading]);
 
   // Helper function to get icon based on action type
   const getActionIcon = (action: string) => {
@@ -67,7 +96,7 @@ export default function LogsPage() {
     }
   };
 
-  if (error) {
+  if (error && logs.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow">
         <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
@@ -78,8 +107,6 @@ export default function LogsPage() {
       </div>
     );
   }
-
-  const logs = data?.logs || [];
 
   // Group logs by date
   const groupedLogs = logs.reduce((groups, log) => {
@@ -152,13 +179,13 @@ export default function LogsPage() {
             ))}
 
             {/* Loading indicator */}
-            {data?.hasMore && (
+            {loading && (
               <div className="flex justify-center py-4">
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
             )}
 
-            {Object.keys(groupedLogs).length === 0 && !error && (
+            {Object.keys(groupedLogs).length === 0 && !loading && (
               <div className="text-center py-12">
                 <Clock className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">No logs found</h3>

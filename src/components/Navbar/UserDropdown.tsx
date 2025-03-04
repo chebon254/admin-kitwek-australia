@@ -3,13 +3,15 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { SignOutButton } from "@clerk/nextjs";
+import { useClerk } from "@clerk/nextjs";
+import { useRouter } from 'next/navigation';
 import { 
   ChevronDown, 
   Bell, 
   ClipboardList, 
   LogOut,
-  User
+  User,
+  Users
 } from "lucide-react";
 
 interface UserDropdownProps {
@@ -23,6 +25,8 @@ interface UserDropdownProps {
 export default function UserDropdown({ user, unreadNotifications = 0 }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { signOut } = useClerk();
+  const router = useRouter();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -34,6 +38,11 @@ export default function UserDropdown({ user, unreadNotifications = 0 }: UserDrop
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/sign-in');
+  };
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -85,15 +94,24 @@ export default function UserDropdown({ user, unreadNotifications = 0 }: UserDrop
               <ClipboardList className="h-4 w-4" />
               System Logs
             </Link>
+            <Link
+              href="/admins"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+              onClick={() => setIsOpen(false)}
+            >
+              <Users className="h-4 w-4" />
+              Manage Admins
+            </Link>
           </div>
 
           <div className="border-t border-gray-100 pt-2">
-            <SignOutButton>
-              <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </button>
-            </SignOutButton>
+            <button 
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </button>
           </div>
         </div>
       )}

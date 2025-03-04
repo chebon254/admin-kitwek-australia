@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import useSWR from 'swr';
 import { 
   Bell,
   UserPlus,
@@ -26,22 +25,51 @@ interface Notification {
   createdAt: string;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
-
 export default function NotificationsPage() {
   const [page, setPage] = useState(1);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { ref, inView } = useInView();
 
-  const { data, error, mutate } = useSWR<{
-    notifications: Notification[];
-    hasMore: boolean;
-  }>(`/api/notifications?page=${page}&limit=${ITEMS_PER_PAGE}`, fetcher);
+  const fetchNotifications = async (pageNum: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/notifications?page=${pageNum}&limit=${ITEMS_PER_PAGE}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch notifications');
+      }
+      
+      const data = await response.json();
+      
+      if (pageNum === 1) {
+        setNotifications(data.notifications);
+      } else {
+        setNotifications(prev => [...prev, ...data.notifications]);
+      }
+      
+      setHasMore(data.hasMore);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      setError('Failed to load notifications');
+      toast.error('Failed to load notifications');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (inView && data?.hasMore) {
+    fetchNotifications(page);
+  }, [page]);
+
+  useEffect(() => {
+    if (inView && hasMore && !loading) {
       setPage(prev => prev + 1);
     }
-  }, [inView, data?.hasMore]);
+  }, [inView, hasMore, loading]);
 
   // Helper function to get icon based on notification type
   const getNotificationIcon = (type: string) => {
@@ -67,13 +95,21 @@ export default function NotificationsPage() {
 
   const handleMarkAsRead = async (id: string) => {
     try {
-      const response = await fetch(`/api/notifications/${id}/mark-read`, {
+      const response = await fetch(`/api/notifications/${id}`, {
         method: 'POST',
       });
 
       if (!response.ok) throw new Error('Failed to mark notification as read');
 
-      mutate(); // Refresh the notifications data
+      // Update local state
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === id 
+            ? { ...notification, read: true } 
+            : notification
+        )
+      );
+      
       toast.success('Notification marked as read');
     } catch (error) {
       console.error('Error:', error);
@@ -89,7 +125,11 @@ export default function NotificationsPage() {
 
       if (!response.ok) throw new Error('Failed to mark all notifications as read');
 
-      mutate(); // Refresh the notifications data
+      // Update local state
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, read: true }))
+      );
+      
       toast.success('All notifications marked as read');
     } catch (error) {
       console.error('Error:', error);
@@ -97,7 +137,7 @@ export default function NotificationsPage() {
     }
   };
 
-  if (error) {
+  if (error && notifications.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow">
         <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
@@ -109,7 +149,6 @@ export default function NotificationsPage() {
     );
   }
 
-  const notifications = data?.notifications || [];
   const unreadNotifications = notifications.filter(n => !n.read);
   const readNotifications = notifications.filter(n => n.read);
 
@@ -194,13 +233,13 @@ export default function NotificationsPage() {
         )}
 
         {/* Loading indicator */}
-        {data?.hasMore && (
+        {loading && (
           <div className="flex justify-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
           </div>
         )}
 
-        {notifications.length === 0 && !error && (
+        {notifications.length === 0 && !loading && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <Bell className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No notifications</h3>

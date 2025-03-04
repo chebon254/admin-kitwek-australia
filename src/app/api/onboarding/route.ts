@@ -1,79 +1,76 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
     const { userId } = await auth();
-    const user = await currentUser();
 
-    if (!userId || !user) {
-      console.error("[ONBOARDING_ERROR] No userId or user found");
+    if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    let body;
-    try {
-      body = await req.json();
-    } catch (e) {
-      console.error("[ONBOARDING_ERROR] Failed to parse request body", e);
-      return new NextResponse("Invalid request body", { status: 400 });
-    }
-
+    const body = await request.json();
     const { name, profileImage } = body;
 
-    // Validate required fields
-    if (!name?.trim() || !profileImage?.trim()) {
-      console.error("[ONBOARDING_ERROR] Missing required fields", {
-        name,
-        profileImage,
-      });
-      return new NextResponse("Name and profile image are required", {
-        status: 400,
-      });
+    if (!name) {
+      return new NextResponse("Name is required", { status: 400 });
     }
 
-    // Get primary email
-    const primaryEmail = user.emailAddresses.find(
-      (email) => email.id === user.primaryEmailAddressId
-    )?.emailAddress;
-
-    if (!primaryEmail) {
-      console.error(
-        "[ONBOARDING_ERROR] No primary email found for user",
-        userId
-      );
-      return new NextResponse("No primary email found", { status: 400 });
+    if (!profileImage) {
+      return new NextResponse("Profile image is required", { status: 400 });
     }
 
-    // Create or update admin user
-    try {
-      const adminUser = await prisma.adminUser.upsert({
+    // Check if admin already exists
+    const existingAdmin = await prisma.adminUser.findUnique({
+      where: { id: userId },
+    });
+
+    if (existingAdmin) {
+      // Update existing admin
+      const updatedAdmin = await prisma.adminUser.update({
         where: { id: userId },
-        update: {
-          name: name.trim(),
-          profileImage,
-          email: primaryEmail,
-        },
-        create: {
-          id: userId,
-          email: primaryEmail,
-          name: name.trim(),
+        data: {
+          name,
           profileImage,
         },
       });
 
-      return NextResponse.json(adminUser);
-    } catch (e) {
-      console.error("[ONBOARDING_ERROR] Database operation failed", e);
-      return new NextResponse("Failed to save user data", { status: 500 });
+      return NextResponse.json(updatedAdmin);
+    } else {
+      // Get email from Clerk
+      const clerkUser = await fetch(
+        `https://api.clerk.dev/v1/users/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+          },
+        }
+      ).then((res) => res.json());
+
+      const email = clerkUser.email_addresses?.[0]?.email_address;
+
+      if (!email) {
+        return new NextResponse(
+          "Failed to retrieve email from authentication provider",
+          { status: 500 }
+        );
+      }
+
+      // Create new admin
+      const newAdmin = await prisma.adminUser.create({
+        data: {
+          id: userId,
+          email,
+          name,
+          profileImage,
+        },
+      });
+
+      return NextResponse.json(newAdmin);
     }
   } catch (error) {
-    // Fix the console.error call to handle null/undefined values properly
-    console.error(
-      "[ONBOARDING_ERROR] Unhandled error:",
-      error instanceof Error ? error.message : "Unknown error"
-    );
-    return new NextResponse("Internal Server Error", { status: 500 });
+    console.error("[ONBOARDING_POST]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
 }

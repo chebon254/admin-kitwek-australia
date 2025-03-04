@@ -22,7 +22,7 @@ const s3Client = new S3Client({
     timeout: 300000, // 5 minutes timeout
   },
   // Add retry configuration with exponential backoff
-  maxAttempts: 5,
+  maxAttempts: 1,
 });
 
 export const uploadImage = async (
