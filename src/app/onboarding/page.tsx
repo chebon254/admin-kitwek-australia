@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import { useRouter } from "next/navigation";
+import Image from "next/image"
 
 export default function OnboardingPage() {
   const { user } = useUser();
@@ -209,10 +210,12 @@ export default function OnboardingPage() {
             />
             {imagePreview && (
               <div className="mt-2 relative h-32 w-32 mx-auto rounded-full overflow-hidden border-2 border-gray-200">
-                <img 
+                <Image 
                   src={imagePreview} 
                   alt="Profile preview" 
-                  className="object-cover w-full h-full"
+                  className="object-cover w-full h-full rounded-full"
+                  height={200}
+                  width={200}
                 />
               </div>
             )}

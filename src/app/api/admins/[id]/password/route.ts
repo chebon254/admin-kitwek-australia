@@ -3,6 +3,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClerkClient } from '@clerk/backend';
 
+// Define a type for Clerk errors
+interface ClerkError {
+  errors?: Array<{
+    message?: string;
+    code?: string;
+  }>;
+  message?: string;
+}
+
 // Initialize Clerk backend SDK
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -12,7 +21,6 @@ export async function PATCH(
 ) {
   try {
     const { userId } = await auth();
-
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -39,7 +47,6 @@ export async function PATCH(
         password: newPassword
       });
 
-
       // Log the action
       await prisma.adminLog.create({
         data: {
@@ -50,15 +57,16 @@ export async function PATCH(
       });
 
       return NextResponse.json({ success: true });
-    } catch (clerkError: any) {
-      console.error("[CLERK_UPDATE_PASSWORD]", clerkError);
-      
+    } catch (clerkError: unknown) {
+      const error = clerkError as ClerkError;
+      console.error("[CLERK_UPDATE_PASSWORD]", error);
+
       // Handle specific Clerk errors
-      if (clerkError.errors?.[0]?.message?.includes("incorrect")) {
+      if (error.errors?.[0]?.message?.includes("incorrect")) {
         return new NextResponse("Current password is incorrect", { status: 400 });
       }
-      
-      return new NextResponse(clerkError.message || "Failed to update password", { status: 500 });
+
+      return new NextResponse(error.message || "Failed to update password", { status: 500 });
     }
   } catch (error) {
     console.error("[ADMIN_PASSWORD_UPDATE]", error);

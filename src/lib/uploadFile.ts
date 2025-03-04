@@ -54,17 +54,21 @@ export async function uploadFile(file: File, path: string): Promise<string> {
         const data = await response.json();
         console.log("Upload successful, received URL:", data.url);
         return data.url;
-      } catch (error: any) {
+      } catch (error: unknown) {
         clearTimeout(timeoutId);
         
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : "Unknown upload error";
+        
         if (attempt >= maxAttempts) {
-          if (error.name === 'AbortError') {
+          if (error instanceof Error && error.name === 'AbortError') {
             throw new Error("Upload request timed out after multiple attempts. Please check your network connection.");
           }
-          throw error;
+          throw new Error(errorMessage);
         }
         
-        console.log(`Request error: ${error.message}. Retrying...`);
+        console.log(`Request error: ${errorMessage}. Retrying...`);
         // Wait before retrying (exponential backoff)
         const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -72,9 +76,12 @@ export async function uploadFile(file: File, path: string): Promise<string> {
     }
     
     throw new Error("Failed to upload after multiple attempts");
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error uploading file:", error);
-    throw new Error(error instanceof Error ? error.message : "Failed to upload file");
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Failed to upload file";
+    throw new Error(errorMessage);
   }
 }
 

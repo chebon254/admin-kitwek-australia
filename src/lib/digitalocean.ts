@@ -9,6 +9,12 @@ if (
   throw new Error("Missing required Digital Ocean configuration");
 }
 
+// Define a custom error type for better error handling
+interface UploadError extends Error {
+  name: string;
+  message: string;
+}
+
 // Create S3 client with improved timeout and retry configuration
 const s3Client = new S3Client({
   endpoint: `https://${process.env.NEXT_PUBLIC_SPACES_ENDPOINT}`,
@@ -44,17 +50,18 @@ export const uploadImage = async (
       /[^a-zA-Z0-9.-]/g,
       ""
     )}`;
-
+    
     console.log(
       `Uploading file: ${fileName}, size: ${file.size} bytes, type: ${file.type}`
     );
-
+    
     // Try multiple times with increasing delays
     let attempt = 0;
     const maxAttempts = 3;
     
     while (attempt < maxAttempts) {
       attempt++;
+      
       try {
         console.log(`Upload attempt ${attempt} of ${maxAttempts}`);
         
@@ -65,22 +72,24 @@ export const uploadImage = async (
           ContentType: file.type,
           ACL: "public-read",
         });
-
+        
         await s3Client.send(command);
+        
         console.log(`Successfully uploaded file: ${fileName}`);
         
         // Success - return the URL
         return `https://${process.env.NEXT_PUBLIC_SPACES_BUCKET}.${process.env.NEXT_PUBLIC_SPACES_ENDPOINT}/${fileName}`;
-      } catch (error: any) {
-        console.error(`S3 upload error on attempt ${attempt}:`, error);
+      } catch (error: unknown) {
+        const err = error as UploadError;
+        console.error(`S3 upload error on attempt ${attempt}:`, err);
         
         if (attempt >= maxAttempts) {
-          if (error.name === "TimeoutError") {
+          if (err.name === "TimeoutError") {
             throw new Error(
               "Upload timed out after multiple attempts. Please check your network connection and Digital Ocean Spaces configuration."
             );
           }
-          throw error;
+          throw err;
         }
         
         // Wait before retrying (exponential backoff)
@@ -91,10 +100,12 @@ export const uploadImage = async (
     }
     
     throw new Error("Failed to upload after multiple attempts");
-  } catch (error: any) {
-    console.error("Upload error:", error);
+  } catch (error: unknown) {
+    const err = error as UploadError;
+    console.error("Upload error:", err);
+    
     throw new Error(
-      error instanceof Error ? error.message : "Failed to upload image"
+      err instanceof Error ? err.message : "Failed to upload image"
     );
   }
 };

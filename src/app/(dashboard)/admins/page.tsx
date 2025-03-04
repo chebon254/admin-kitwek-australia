@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   UserPlus,
-  Trash2,
   Search,
   AlertCircle,
   Loader2,
@@ -27,8 +26,6 @@ export default function AdminsPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const router = useRouter();
-  const { user } = useUser();
 
   const superAdminEmail = "info@kitwekvictoria.org";
 
