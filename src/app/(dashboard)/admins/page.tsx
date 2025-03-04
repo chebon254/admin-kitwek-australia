@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   UserPlus,
   Search,
@@ -12,7 +11,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { useUser } from "@clerk/nextjs";
 
 interface AdminUser {
   id: string;

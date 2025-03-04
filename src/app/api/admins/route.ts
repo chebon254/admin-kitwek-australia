@@ -3,13 +3,21 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClerkClient } from '@clerk/backend';
 
+// Define a type for Clerk errors
+interface ClerkError {
+  errors?: Array<{
+    message?: string;
+    code?: string;
+  }>;
+  message?: string;
+}
+
 // Initialize Clerk backend SDK
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 export async function GET() {
   try {
     const { userId } = await auth();
-
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -28,7 +36,6 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
-
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -81,15 +88,22 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json(admin);
-    } catch (clerkError: any) {
+    } catch (error: unknown) {
+      const clerkError = error as ClerkError;
       console.error("[CLERK_CREATE_USER]", clerkError);
-      
+
       // Handle specific Clerk errors
-      if (clerkError.errors?.[0]?.message?.includes("already exists")) {
+      if (
+        clerkError.errors &&
+        clerkError.errors[0]?.message?.includes("already exists")
+      ) {
         return new NextResponse("User with this email already exists in authentication system", { status: 400 });
       }
-      
-      return new NextResponse(clerkError.message || "Failed to create user in authentication system", { status: 500 });
+
+      return new NextResponse(
+        clerkError.message || "Failed to create user in authentication system", 
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error("[ADMINS_POST]", error);
