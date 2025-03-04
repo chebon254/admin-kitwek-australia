@@ -14,7 +14,7 @@ export default function SignInPage() {
           <div className="flex">
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
-                Only allowed users/admin. Contact info@kitwekvictoria.org to get access.
+                Only allowed users/admin can access the admin. Contact info@kitwekvictoria.org to get access.
               </p>
             </div>
           </div>

@@ -34,10 +34,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { email, name } = body;
+    const { email, name, password } = body;
 
     if (!email) {
       return new NextResponse("Email is required", { status: 400 });
+    }
+
+    if (!password) {
+      return new NextResponse("Password is required", { status: 400 });
     }
 
     // Check if admin already exists
@@ -50,11 +54,12 @@ export async function POST(request: Request) {
     }
 
     try {
-      // Create user in Clerk
+      // Create user in Clerk with password
       const clerkUser = await clerk.users.createUser({
         emailAddress: [email],
         firstName: name?.split(' ')[0] || undefined,
         lastName: name?.split(' ').slice(1).join(' ') || undefined,
+        password: password,
       });
 
       // Create admin in database

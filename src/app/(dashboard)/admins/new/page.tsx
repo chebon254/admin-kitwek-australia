@@ -1,53 +1,68 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import Link from "next/link";
-import toast from "react-hot-toast";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 export default function NewAdminPage() {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!email.trim()) {
-      toast.error("Email is required");
+      toast.error('Email is required');
+      return;
+    }
+
+    if (!password.trim()) {
+      toast.error('Password is required');
+      return;
+    }
+
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters');
       return;
     }
 
     try {
       setLoading(true);
-      const response = await fetch("/api/admins", {
-        method: "POST",
+      const response = await fetch('/api/admins', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: email.trim(),
           name: name.trim() || undefined,
+          password: password.trim(),
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create admin");
+        throw new Error(errorData.message || 'Failed to create admin');
       }
 
-      toast.success("Admin created successfully");
-      router.push("/admins");
+      toast.success('Admin created successfully');
+      router.push('/admins');
     } catch (error) {
-      console.error("Error creating admin:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create admin"
-      );
+      console.error('Error creating admin:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create admin');
     } finally {
       setLoading(false);
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -62,10 +77,7 @@ export default function NewAdminPage() {
       <div className="bg-white rounded-lg shadow-lg p-6">
         <form onSubmit={handleSubmit} className="space-y-6 max-w-md">
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email Address *
             </label>
             <input
@@ -78,16 +90,10 @@ export default function NewAdminPage() {
               required
               disabled={loading}
             />
-            <p className="mt-1 text-sm text-gray-500">
-              The admin will receive an invitation to sign in with this email
-            </p>
           </div>
 
           <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Name (Optional)
             </label>
             <input
@@ -99,6 +105,35 @@ export default function NewAdminPage() {
               placeholder="John Doe"
               disabled={loading}
             />
+          </div>
+
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password *
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                placeholder="Enter password"
+                required
+                minLength={8}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+            <p className="mt-1 text-sm text-gray-500">
+              Password must be at least 8 characters
+            </p>
           </div>
 
           <div className="pt-4">
@@ -113,7 +148,7 @@ export default function NewAdminPage() {
                   Creating...
                 </>
               ) : (
-                "Create Admin"
+                'Create Admin'
               )}
             </button>
           </div>
