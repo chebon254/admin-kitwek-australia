@@ -151,7 +151,7 @@ export default function AdminDetailPage() {
             <div className="relative h-32 w-32 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
               {admin.profileImage ? (
                 <Image
-                  src={admin.profileImage}
+                  src={admin.profileImage || "/ui-assets/avatar.webp"}
                   alt={admin.name || 'Admin'}
                   fill
                   className="object-cover"

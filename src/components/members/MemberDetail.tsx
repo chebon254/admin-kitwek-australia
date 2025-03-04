@@ -110,7 +110,7 @@ export default function MemberDetail({ member }: MemberProps) {
               <div className="relative h-24 w-24 rounded-full overflow-hidden bg-gray-100">
                 {member.profileImage ? (
                   <Image
-                    src={member.profileImage}
+                    src={member.profileImage || "/ui-assets/avatar.webp"}
                     alt={member.username || member.email}
                     fill
                     className="object-cover"

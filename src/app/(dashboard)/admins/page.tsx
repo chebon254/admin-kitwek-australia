@@ -155,7 +155,7 @@ export default function AdminsPage() {
                         <div className="h-10 w-10 flex-shrink-0 relative rounded-full overflow-hidden bg-gray-100">
                           {admin.profileImage ? (
                             <Image
-                              src={admin.profileImage}
+                              src={admin.profileImage || "/ui-assets/avatar.webp"}
                               alt={admin.name || "Admin"}
                               fill
                               className="object-cover"

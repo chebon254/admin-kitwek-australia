@@ -72,7 +72,7 @@ export default function MembersList() {
               <div className="relative h-16 w-16 rounded-full overflow-hidden bg-gray-100">
                 {member.profileImage ? (
                   <Image
-                    src={member.profileImage}
+                    src={member.profileImage || "/ui-assets/avatar.webp"}
                     alt={`${member.firstName} ${member.lastName}`}
                     fill
                     className="object-cover"
