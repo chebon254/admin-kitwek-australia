@@ -1,7 +1,7 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createClerkClient } from '@clerk/backend';
+import { createClerkClient } from "@clerk/backend";
 
 // Initialize Clerk backend SDK
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
@@ -26,7 +26,9 @@ export async function POST(request: Request) {
     });
 
     if (existingAdmin) {
-      return new NextResponse("Admin with this email already exists", { status: 400 });
+      return new NextResponse("Admin with this email already exists", {
+        status: 400,
+      });
     }
 
     try {
@@ -35,9 +37,9 @@ export async function POST(request: Request) {
         emailAddress: email,
         publicMetadata: {
           role: "admin",
-          name: name || undefined
+          name: name || undefined,
         },
-        redirectUrl: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || '/',
+        redirectUrl: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || "/",
       });
 
       // Create admin in database (we'll mark it as pending)
@@ -59,17 +61,29 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json(admin);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[CLERK_CREATE_INVITATION]", error);
 
-      if (error.errors?.[0]?.message?.includes("already exists")) {
-        return new NextResponse("User with this email already exists in authentication system", { status: 400 });
+      // Type guard to check and handle the error properly
+      if (
+        error &&
+        typeof error === "object" &&
+        "errors" in error &&
+        Array.isArray((error as any).errors) &&
+        (error as any).errors[0]?.message?.includes("already exists")
+      ) {
+        return new NextResponse(
+          "User with this email already exists in authentication system",
+          { status: 400 }
+        );
       }
 
-      return new NextResponse(
-        error.message || "Failed to create invitation", 
-        { status: 500 }
-      );
+      const errorMessage =
+        error && typeof error === "object" && "message" in error
+          ? (error as { message: string }).message
+          : "Failed to create invitation";
+
+      return new NextResponse(errorMessage, { status: 500 });
     }
   } catch (error) {
     console.error("[ADMINS_INVITE_POST]", error);
