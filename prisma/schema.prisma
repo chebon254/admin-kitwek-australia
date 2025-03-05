@@ -19,6 +19,7 @@ model User {
   proffession     String?
   phone           String?
   profileImage    String?
+  memberNumber    String?   @unique
   membershipStatus String   @default("INACTIVE")
   subscription    String    @default("Free")
   revokeStatus    Boolean   @default(false)
