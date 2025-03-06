@@ -6,6 +6,19 @@ import { createClerkClient } from "@clerk/backend";
 // Initialize Clerk backend SDK
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
+// Type guard for Clerk error structure
+function isClerkError(error: unknown): error is { errors: { message: string }[] } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "errors" in error &&
+    Array.isArray((error as { errors: unknown }).errors) &&
+    (error as { errors: { message: unknown }[] }).errors.every(
+      (err) => typeof err.message === "string"
+    )
+  );
+}
+
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
@@ -42,7 +55,7 @@ export async function POST(request: Request) {
         redirectUrl: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || "/",
       });
 
-      // Create admin in database (we'll mark it as pending)
+      // Create admin in database (marked as pending)
       const admin = await prisma.adminUser.create({
         data: {
           id: invitation.id, // Using invitation ID temporarily
@@ -64,25 +77,14 @@ export async function POST(request: Request) {
     } catch (error: unknown) {
       console.error("[CLERK_CREATE_INVITATION]", error);
 
-      // Type guard to check and handle the error properly
-      if (
-        error &&
-        typeof error === "object" &&
-        "errors" in error &&
-        Array.isArray((error as any).errors) &&
-        (error as any).errors[0]?.message?.includes("already exists")
-      ) {
+      if (isClerkError(error) && error.errors[0].message.includes("already exists")) {
         return new NextResponse(
           "User with this email already exists in authentication system",
           { status: 400 }
         );
       }
 
-      const errorMessage =
-        error && typeof error === "object" && "message" in error
-          ? (error as { message: string }).message
-          : "Failed to create invitation";
-
+      const errorMessage = error instanceof Error ? error.message : "Failed to create invitation";
       return new NextResponse(errorMessage, { status: 500 });
     }
   } catch (error) {
