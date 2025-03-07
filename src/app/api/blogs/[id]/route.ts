@@ -2,6 +2,70 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const blog = await prisma.blog.findUnique({
+      where: { id: (await params).id },
+    });
+
+    if (!blog || blog.adminId !== userId) {
+      return new NextResponse("Not found", { status: 404 });
+    }
+
+    return NextResponse.json(blog);
+  } catch (error) {
+    console.error("[BLOG_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const blog = await prisma.blog.findUnique({
+      where: { id: (await params).id },
+    });
+
+    if (!blog || blog.adminId !== userId) {
+      return new NextResponse("Not found", { status: 404 });
+    }
+
+    const { title, description, thumbnail, files } = await req.json();
+
+    const updatedBlog = await prisma.blog.update({
+      where: { id: (await params).id },
+      data: {
+        title,
+        description,
+        thumbnail,
+        files: files || [],
+      },
+    });
+
+    return NextResponse.json(updatedBlog);
+  } catch (error) {
+    console.error("[BLOG_PATCH]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
