@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 
-type Props = {
+interface Props {
   params: {
     id: string;
   };
