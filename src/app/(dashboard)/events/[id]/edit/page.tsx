@@ -6,13 +6,15 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 
-interface Props {
-  params: Promise<{
+interface PageProps {
+  params: {
     id: string;
-  }>;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function EditEventPage({ params }: Props) {
+export default function EditEventPage({ params }: PageProps) {
+  // Rest of the component remains exactly the same
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -30,7 +32,7 @@ export default async function EditEventPage({ params }: Props) {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await fetch(`/api/events/${(await params).id}`);
+        const response = await fetch(`/api/events/${params.id}`);
         if (!response.ok) throw new Error('Event not found');
         const event = await response.json();
         
@@ -55,7 +57,7 @@ export default async function EditEventPage({ params }: Props) {
     };
 
     fetchEvent();
-  }, [(await params).id, router]);
+  }, [params.id, router]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,7 +90,7 @@ export default async function EditEventPage({ params }: Props) {
         thumbnailUrl = await uploadFile(thumbnail, "events");
       }
 
-      const response = await fetch(`/api/events/${(await params).id}`, {
+      const response = await fetch(`/api/events/${params.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
