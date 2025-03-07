@@ -10,11 +10,9 @@ interface PageProps {
   params: {
     id: string;
   };
-  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default function EditBlogPage({ params }: PageProps) {
-  // Rest of the component remains the same
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
