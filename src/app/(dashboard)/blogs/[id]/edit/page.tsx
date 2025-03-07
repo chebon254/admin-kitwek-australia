@@ -6,13 +6,7 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 
-interface Props {
-  params: {
-    id: string;
-  };
-}
-
-export default function EditBlogPage({ params }: Props) {
+export default function EditBlogPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");

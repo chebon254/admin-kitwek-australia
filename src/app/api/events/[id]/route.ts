@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const event = await prisma.event.findUnique({
-      where: { id: (await params).id },
+      where: { id: params.id },
     });
 
     if (!event || event.adminId !== userId) {
@@ -30,7 +30,7 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -40,7 +40,7 @@ export async function PATCH(
     }
 
     const event = await prisma.event.findUnique({
-      where: { id: (await params).id },
+      where: { id: params.id },
     });
 
     if (!event || event.adminId !== userId) {
@@ -50,7 +50,7 @@ export async function PATCH(
     const { title, description, thumbnail, date, location, capacity, isPaid, price, status } = await req.json();
 
     const updatedEvent = await prisma.event.update({
-      where: { id: (await params).id },
+      where: { id: params.id },
       data: {
         title,
         description,
@@ -73,7 +73,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -83,7 +83,7 @@ export async function DELETE(
     }
 
     const event = await prisma.event.findUnique({
-      where: { id: (await params).id },
+      where: { id: params.id },
     });
 
     if (!event || event.adminId !== userId) {
@@ -91,7 +91,7 @@ export async function DELETE(
     }
 
     await prisma.event.delete({
-      where: { id: (await params).id },
+      where: { id: params.id },
     });
 
     return new NextResponse(null, { status: 204 });

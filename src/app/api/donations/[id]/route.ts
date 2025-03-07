@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const donation = await prisma.donation.findUnique({
-      where: { id: (await params).id },
+      where: { id: params.id },
     });
 
     if (!donation || donation.adminId !== userId) {
@@ -30,7 +30,7 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -40,7 +40,7 @@ export async function PATCH(
     }
 
     const donation = await prisma.donation.findUnique({
-      where: { id: (await params).id },
+      where: { id: params.id },
     });
 
     if (!donation || donation.adminId !== userId) {
@@ -50,7 +50,7 @@ export async function PATCH(
     const { name, description, thumbnail, goal, endDate } = await req.json();
 
     const updatedDonation = await prisma.donation.update({
-      where: { id: (await params).id },
+      where: { id: params.id },
       data: {
         name,
         description,
@@ -69,7 +69,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -79,7 +79,7 @@ export async function DELETE(
     }
 
     const donation = await prisma.donation.findUnique({
-      where: { id: (await params).id },
+      where: { id: params.id },
     });
 
     if (!donation || donation.adminId !== userId) {
@@ -87,7 +87,7 @@ export async function DELETE(
     }
 
     await prisma.donation.delete({
-      where: { id: (await params).id },
+      where: { id: params.id },
     });
 
     return new NextResponse(null, { status: 204 });
