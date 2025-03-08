@@ -6,13 +6,7 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 
-interface Props {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export default async function EditDonationPage({ params }: Props) {
+export default function EditDonationPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -22,12 +16,10 @@ export default async function EditDonationPage({ params }: Props) {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
 
-  const { id } = await params;
-
   useEffect(() => {
     const fetchDonation = async () => {
       try {
-        const response = await fetch(`/api/donations/${id}`);
+        const response = await fetch(`/api/donations/${params.id}`);
         if (!response.ok) throw new Error('Donation not found');
         const donation = await response.json();
         
@@ -44,7 +36,7 @@ export default async function EditDonationPage({ params }: Props) {
     };
 
     fetchDonation();
-  }, [id, router]);
+  }, [params.id, router]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,7 +61,7 @@ export default async function EditDonationPage({ params }: Props) {
         thumbnailUrl = await uploadFile(thumbnail, "donations");
       }
 
-      const response = await fetch(`/api/donations/${id}`, {
+      const response = await fetch(`/api/donations/${params.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

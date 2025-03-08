@@ -6,13 +6,7 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 
-interface Props {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export default async function EditBlogPage({ params }: Props) {
+export default function EditBlogPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -22,12 +16,10 @@ export default async function EditBlogPage({ params }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [currentFiles, setCurrentFiles] = useState<string[]>([]);
 
-  const { id } = await params;
-
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await fetch(`/api/blogs/${id}`);
+        const response = await fetch(`/api/blogs/${params.id}`);
         if (!response.ok) throw new Error('Blog not found');
         const blog = await response.json();
         
@@ -43,7 +35,7 @@ export default async function EditBlogPage({ params }: Props) {
     };
 
     fetchBlog();
-  }, [id, router]);
+  }, [params.id, router]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -89,7 +81,7 @@ export default async function EditBlogPage({ params }: Props) {
       // Combine current and new files
       const allFiles = [...currentFiles, ...newFileUrls];
 
-      const response = await fetch(`/api/blogs/${id}`, {
+      const response = await fetch(`/api/blogs/${params.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
