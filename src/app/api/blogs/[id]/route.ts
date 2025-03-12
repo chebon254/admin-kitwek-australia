@@ -65,7 +65,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string } >}
 ) {
   try {
     const { userId } = await auth();
@@ -74,7 +74,7 @@ export async function DELETE(
     }
     
     const blog = await prisma.blog.findUnique({
-      where: { id: params.id },
+      where: { id: (await params).id },
     });
     
     if (!blog || blog.adminId !== userId) {
@@ -82,7 +82,7 @@ export async function DELETE(
     }
     
     await prisma.blog.delete({
-      where: { id: params.id },
+      where: { id: (await params).id },
     });
     
     return new NextResponse(null, { status: 204 });
