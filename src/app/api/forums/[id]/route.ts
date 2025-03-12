@@ -13,17 +13,17 @@ export async function GET(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const donation = await prisma.donation.findUnique({
+    const forum = await prisma.forum.findUnique({
       where: { id: (await params).id },
     });
 
-    if (!donation || donation.adminId !== userId) {
+    if (!forum || forum.adminId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    return NextResponse.json(donation);
+    return NextResponse.json(forum);
   } catch (error) {
-    console.error("[DONATION_GET]", error);
+    console.error("[FORUM_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -39,30 +39,27 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const donation = await prisma.donation.findUnique({
+    const forum = await prisma.forum.findUnique({
       where: { id: (await params).id },
     });
 
-    if (!donation || donation.adminId !== userId) {
+    if (!forum || forum.adminId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    const { name, description, thumbnail, goal, endDate } = await request.json();
+    const { title, description } = await request.json();
 
-    const updatedDonation = await prisma.donation.update({
+    const updatedForum = await prisma.forum.update({
       where: { id: (await params).id },
       data: {
-        name,
+        title,
         description,
-        thumbnail,
-        goal: goal || null,
-        endDate: endDate ? new Date(endDate) : null,
       },
     });
 
-    return NextResponse.json(updatedDonation);
+    return NextResponse.json(updatedForum);
   } catch (error) {
-    console.error("[DONATION_PATCH]", error);
+    console.error("[FORUM_PATCH]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -78,21 +75,21 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const donation = await prisma.donation.findUnique({
+    const forum = await prisma.forum.findUnique({
       where: { id: (await params).id },
     });
 
-    if (!donation || donation.adminId !== userId) {
+    if (!forum || forum.adminId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    await prisma.donation.delete({
+    await prisma.forum.delete({
       where: { id: (await params).id },
     });
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("[DONATION_DELETE]", error);
+    console.error("[FORUM_DELETE]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
