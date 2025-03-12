@@ -2,7 +2,6 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// This is the correct way to type route params in Next.js App Router
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
