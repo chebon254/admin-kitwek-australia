@@ -6,7 +6,12 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 
-export default function EditBlogPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default function EditBlogPage({ params }: PageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -19,7 +24,8 @@ export default function EditBlogPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await fetch(`/api/blogs/${params.id}`);
+        const { id } = await params;
+        const response = await fetch(`/api/blogs/${id}`);
         if (!response.ok) throw new Error('Blog not found');
         const blog = await response.json();
         
@@ -35,7 +41,7 @@ export default function EditBlogPage({ params }: { params: { id: string } }) {
     };
 
     fetchBlog();
-  }, [params.id, router]);
+  }, [params, router]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,6 +73,7 @@ export default function EditBlogPage({ params }: { params: { id: string } }) {
     
     try {
       setLoading(true);
+      const { id } = await params;
 
       let thumbnailUrl = thumbnailPreview;
       if (thumbnail) {
@@ -81,7 +88,7 @@ export default function EditBlogPage({ params }: { params: { id: string } }) {
       // Combine current and new files
       const allFiles = [...currentFiles, ...newFileUrls];
 
-      const response = await fetch(`/api/blogs/${params.id}`, {
+      const response = await fetch(`/api/blogs/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

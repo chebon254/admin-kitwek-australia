@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
-export default function EditForumPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default function EditForumPage({ params }: PageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -13,7 +18,8 @@ export default function EditForumPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchForum = async () => {
       try {
-        const response = await fetch(`/api/forums/${params.id}`);
+        const { id } = await params;
+        const response = await fetch(`/api/forums/${id}`);
         if (!response.ok) throw new Error('Forum not found');
         const forum = await response.json();
         
@@ -27,15 +33,16 @@ export default function EditForumPage({ params }: { params: { id: string } }) {
     };
 
     fetchForum();
-  }, [params.id, router]);
+  }, [params, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       setLoading(true);
+      const { id } = await params;
 
-      const response = await fetch(`/api/forums/${params.id}`, {
+      const response = await fetch(`/api/forums/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

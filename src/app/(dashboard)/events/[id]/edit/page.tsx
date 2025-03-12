@@ -6,7 +6,12 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 
-export default function EditEventPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default function EditEventPage({ params }: PageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -24,7 +29,8 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await fetch(`/api/events/${params.id}`);
+        const { id } = await params;
+        const response = await fetch(`/api/events/${id}`);
         if (!response.ok) throw new Error('Event not found');
         const event = await response.json();
         
@@ -49,7 +55,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
     };
 
     fetchEvent();
-  }, [params.id, router]);
+  }, [params, router]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -68,6 +74,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
     
     try {
       setLoading(true);
+      const { id } = await params;
 
       if (!date || !time) {
         toast.error("Please select both date and time");
@@ -82,7 +89,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
         thumbnailUrl = await uploadFile(thumbnail, "events");
       }
 
-      const response = await fetch(`/api/events/${params.id}`, {
+      const response = await fetch(`/api/events/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
