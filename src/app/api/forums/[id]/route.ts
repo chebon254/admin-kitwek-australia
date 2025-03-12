@@ -2,9 +2,13 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+interface RouteParams {
+  params: { id: string };
+}
+
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: RouteParams
 ) {
   try {
     const { userId } = await auth();
@@ -13,24 +17,24 @@ export async function GET(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const forum = await prisma.forum.findUnique({
+    const donation = await prisma.donation.findUnique({
       where: { id: params.id },
     });
 
-    if (!forum || forum.adminId !== userId) {
+    if (!donation || donation.adminId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    return NextResponse.json(forum);
+    return NextResponse.json(donation);
   } catch (error) {
-    console.error("[FORUM_GET]", error);
+    console.error("[DONATION_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: RouteParams
 ) {
   try {
     const { userId } = await auth();
@@ -39,34 +43,37 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const forum = await prisma.forum.findUnique({
+    const donation = await prisma.donation.findUnique({
       where: { id: params.id },
     });
 
-    if (!forum || forum.adminId !== userId) {
+    if (!donation || donation.adminId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    const { title, description } = await req.json();
+    const { name, description, thumbnail, goal, endDate } = await request.json();
 
-    const updatedForum = await prisma.forum.update({
+    const updatedDonation = await prisma.donation.update({
       where: { id: params.id },
       data: {
-        title,
+        name,
         description,
+        thumbnail,
+        goal: goal || null,
+        endDate: endDate ? new Date(endDate) : null,
       },
     });
 
-    return NextResponse.json(updatedForum);
+    return NextResponse.json(updatedDonation);
   } catch (error) {
-    console.error("[FORUM_PATCH]", error);
+    console.error("[DONATION_PATCH]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: RouteParams
 ) {
   try {
     const { userId } = await auth();
@@ -75,21 +82,21 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const forum = await prisma.forum.findUnique({
+    const donation = await prisma.donation.findUnique({
       where: { id: params.id },
     });
 
-    if (!forum || forum.adminId !== userId) {
+    if (!donation || donation.adminId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    await prisma.forum.delete({
+    await prisma.donation.delete({
       where: { id: params.id },
     });
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("[FORUM_DELETE]", error);
+    console.error("[DONATION_DELETE]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

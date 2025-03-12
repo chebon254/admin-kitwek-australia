@@ -2,9 +2,13 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+interface RouteParams {
+  params: { id: string };
+}
+
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: RouteParams
 ) {
   try {
     const { userId } = await auth();
@@ -29,8 +33,8 @@ export async function GET(
 }
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: RouteParams
 ) {
   try {
     const { userId } = await auth();
@@ -47,7 +51,7 @@ export async function PATCH(
       return new NextResponse("Not found", { status: 404 });
     }
 
-    const { title, description, thumbnail, date, location, capacity, isPaid, price, status } = await req.json();
+    const { title, description, thumbnail, date, location, capacity, isPaid, price, status } = await request.json();
 
     const updatedEvent = await prisma.event.update({
       where: { id: params.id },
@@ -72,8 +76,8 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: RouteParams
 ) {
   try {
     const { userId } = await auth();
