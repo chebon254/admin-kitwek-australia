@@ -29,7 +29,7 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -38,7 +38,7 @@ export async function PATCH(
     }
     
     const blog = await prisma.blog.findUnique({
-      where: { id: params.id },
+      where: { id: (await params).id },
     });
     
     if (!blog || blog.adminId !== userId) {
@@ -47,7 +47,7 @@ export async function PATCH(
     
     const { title, description, thumbnail, files } = await request.json();
     const updatedBlog = await prisma.blog.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data: {
         title,
         description,
