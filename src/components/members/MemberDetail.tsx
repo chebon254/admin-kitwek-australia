@@ -161,7 +161,7 @@ export default function MemberDetail({ member }: MemberProps) {
                 <Shield className="h-5 w-5 text-gray-500" />
                 <div>
                   <div className="text-sm font-medium text-gray-600">Subscription</div>
-                  <div>{member.subscription}</div>
+                  <div>Annual</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">

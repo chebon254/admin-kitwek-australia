@@ -97,7 +97,7 @@ export default function MembersList() {
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Subscription</span>
-                <span className="font-medium">{member.subscription}</span>
+                <span className="font-medium">Annual</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Member Since</span>
