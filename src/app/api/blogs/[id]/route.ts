@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -13,7 +13,7 @@ export async function GET(
     }
     
     const blog = await prisma.blog.findUnique({
-      where: { id: params.id },
+      where: { id: (await params).id },
     });
     
     if (!blog || blog.adminId !== userId) {
