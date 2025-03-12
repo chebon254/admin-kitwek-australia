@@ -2,13 +2,9 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-interface RouteParams {
-  params: { id: string };
-}
-
 export async function GET(
   request: Request,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -18,7 +14,7 @@ export async function GET(
     }
 
     const donation = await prisma.donation.findUnique({
-      where: { id: params.id },
+      where: { id: (await params).id },
     });
 
     if (!donation || donation.adminId !== userId) {
@@ -34,7 +30,7 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -44,7 +40,7 @@ export async function PATCH(
     }
 
     const donation = await prisma.donation.findUnique({
-      where: { id: params.id },
+      where: { id: (await params).id },
     });
 
     if (!donation || donation.adminId !== userId) {
@@ -54,7 +50,7 @@ export async function PATCH(
     const { name, description, thumbnail, goal, endDate } = await request.json();
 
     const updatedDonation = await prisma.donation.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data: {
         name,
         description,
@@ -73,7 +69,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: RouteParams
+  { params }: { params: Promise<{ id: string } >}
 ) {
   try {
     const { userId } = await auth();
@@ -83,7 +79,7 @@ export async function DELETE(
     }
 
     const donation = await prisma.donation.findUnique({
-      where: { id: params.id },
+      where: { id: (await params).id },
     });
 
     if (!donation || donation.adminId !== userId) {
@@ -91,7 +87,7 @@ export async function DELETE(
     }
 
     await prisma.donation.delete({
-      where: { id: params.id },
+      where: { id: (await params).id },
     });
 
     return new NextResponse(null, { status: 204 });
