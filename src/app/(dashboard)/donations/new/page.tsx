@@ -30,7 +30,7 @@ export default function NewDonationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
 
@@ -126,7 +126,7 @@ export default function NewDonationPage() {
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className="w-full p-2 border rounded-md"
-              min={new Date().toISOString().split('T')[0]}
+              min={new Date().toISOString().split("T")[0]}
               disabled={loading}
             />
           </div>

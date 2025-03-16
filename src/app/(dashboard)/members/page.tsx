@@ -36,12 +36,12 @@ export default function MembersPage() {
         <input
           type="text"
           placeholder="Search members..."
-          className="px-4 py-2 border rounded-lg"
+          className="px-4 py-2 border rounded-lg border-slate-300"
           defaultValue={search}
           onChange={(e) => updateSearch(e.target.value)}
         />
         <select
-          className="px-4 py-2 border rounded-lg"
+          className="px-4 py-2 pr-10 border rounded-lg border-slate-300"
           defaultValue={status}
           onChange={(e) => updateStatus(e.target.value)}
         >
