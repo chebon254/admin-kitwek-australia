@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { SuccessNotification } from "@/components/SuccessNotification";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -14,6 +15,7 @@ export default function EditForumPage({ params }: PageProps) {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchForum = async () => {
@@ -55,8 +57,10 @@ export default function EditForumPage({ params }: PageProps) {
         throw new Error("Failed to update forum");
       }
 
-      toast.success("Forum updated successfully");
-      router.push("/forums");
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/forums");
+      }, 5000);
     } catch (error) {
       console.error("Error updating forum:", error);
       toast.error("Failed to update forum");
@@ -113,6 +117,13 @@ export default function EditForumPage({ params }: PageProps) {
           </button>
         </div>
       </form>
+
+      {showSuccess && (
+        <SuccessNotification
+          message="Forum was updated successfully!"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 }

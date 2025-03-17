@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
+import { SuccessNotification } from "@/components/SuccessNotification";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -16,10 +17,12 @@ export default function EditBlogPage({ params }: PageProps) {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [blogTag, setBlogTag] = useState("Blog");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
   const [currentFiles, setCurrentFiles] = useState<string[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -31,6 +34,7 @@ export default function EditBlogPage({ params }: PageProps) {
         
         setTitle(blog.title);
         setDescription(blog.description);
+        setBlogTag(blog.blogTag || "Blog");
         setThumbnailPreview(blog.thumbnail);
         setCurrentFiles(blog.files || []);
       } catch (error) {
@@ -80,12 +84,10 @@ export default function EditBlogPage({ params }: PageProps) {
         thumbnailUrl = await uploadFile(thumbnail, "blogs");
       }
 
-      // Upload new files if any
       const newFileUrls = await Promise.all(
         files.map(file => uploadFile(file, "blogs"))
       );
 
-      // Combine current and new files
       const allFiles = [...currentFiles, ...newFileUrls];
 
       const response = await fetch(`/api/blogs/${id}`, {
@@ -94,6 +96,7 @@ export default function EditBlogPage({ params }: PageProps) {
         body: JSON.stringify({
           title,
           description,
+          blogTag,
           thumbnail: thumbnailUrl,
           files: allFiles,
         }),
@@ -103,8 +106,10 @@ export default function EditBlogPage({ params }: PageProps) {
         throw new Error("Failed to update blog post");
       }
 
-      toast.success("Blog post updated successfully");
-      router.push("/blogs");
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/blogs");
+      }, 5000);
     } catch (error) {
       console.error("Error updating blog:", error);
       toast.error("Failed to update blog post");
@@ -142,6 +147,22 @@ export default function EditBlogPage({ params }: PageProps) {
             required
             disabled={loading}
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Blog Type
+          </label>
+          <select
+            value={blogTag}
+            onChange={(e) => setBlogTag(e.target.value)}
+            className="w-full p-2 border rounded-md"
+            required
+            disabled={loading}
+          >
+            <option value="Blog">Blog</option>
+            <option value="News">News</option>
+          </select>
         </div>
 
         <div>
@@ -245,6 +266,13 @@ export default function EditBlogPage({ params }: PageProps) {
           </button>
         </div>
       </form>
+
+      {showSuccess && (
+        <SuccessNotification
+          message="Blog was updated successfully!"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 }

@@ -74,6 +74,7 @@ model Blog {
   description String    @db.Text
   thumbnail   String
   files       Json?     // Array of file URLs
+  blogTag     String    @default("Blog") // New field with default value
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   adminId     String

@@ -1,11 +1,15 @@
-import { auth } from '@clerk/nextjs/server'
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { 
-  Users, FileText, Calendar, MessageSquare, 
-  DollarSign, TrendingUp, Activity, Clock
+import {
+  Users,
+  FileText,
+  Calendar,
+  MessageSquare,
+  DollarSign,
+  TrendingUp,
+  Clock,
 } from "lucide-react";
-import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -13,9 +17,6 @@ export default async function DashboardPage() {
   const { userId } = await auth();
 
   if (!userId) {
-    const currentUrl = (await headers()).get("referer") || ""; // Get the referring URL
-
-    if (currentUrl.includes("/sign-in")) return null; // Prevent redirect loop
     redirect("/sign-in");
   }
 
@@ -24,7 +25,8 @@ export default async function DashboardPage() {
     eventsCount,
     forumsCount,
     donationsCount,
-    totalUsers,
+    activeUsers,
+    inactiveUsers,
     recentUsers,
     recentDonations,
     upcomingEvents,
@@ -35,7 +37,8 @@ export default async function DashboardPage() {
     prisma.event.count({ where: { adminId: userId } }),
     prisma.forum.count({ where: { adminId: userId } }),
     prisma.donation.count({ where: { adminId: userId } }),
-    prisma.user.count(),
+    prisma.user.count({ where: { membershipStatus: 'ACTIVE' } }),
+    prisma.user.count({ where: { membershipStatus: 'INACTIVE' } }),
     prisma.user.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
@@ -51,39 +54,39 @@ export default async function DashboardPage() {
     }),
     prisma.donation.findMany({
       take: 5,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         donors: {
           take: 1,
-          orderBy: { createdAt: 'desc' }
-        }
-      }
+          orderBy: { createdAt: "desc" },
+        },
+      },
     }),
     prisma.event.findMany({
       take: 5,
       where: {
         date: {
-          gte: new Date()
+          gte: new Date(),
         },
-        status: 'UPCOMING'
+        status: "UPCOMING",
       },
-      orderBy: { date: 'asc' },
+      orderBy: { date: "asc" },
       include: {
         _count: {
-          select: { attendees: true }
-        }
-      }
+          select: { attendees: true },
+        },
+      },
     }),
     prisma.donor.aggregate({
       _sum: {
-        amount: true
-      }
+        amount: true,
+      },
     }),
     prisma.event.count({
       where: {
-        status: 'ONGOING'
-      }
-    })
+        status: "ONGOING",
+      },
+    }),
   ]);
 
   return (
@@ -93,17 +96,18 @@ export default async function DashboardPage() {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Members</p>
-              <p className="text-2xl font-bold text-gray-900">{totalUsers}</p>
+              <p className="text-sm font-medium text-gray-600">Members</p>
+              <div className="mt-2">
+                <p className="text-lg font-semibold text-green-600">
+                  {activeUsers} Active
+                </p>
+                <p className="text-lg font-semibold text-red-600">
+                  {inactiveUsers} Inactive
+                </p>
+              </div>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
               <Users className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center text-sm">
-              <Activity className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-green-500 font-medium">Active Now</span>
             </div>
           </div>
         </div>
@@ -121,7 +125,9 @@ export default async function DashboardPage() {
           <div className="mt-4">
             <div className="flex items-center text-sm">
               <Clock className="h-4 w-4 text-blue-500 mr-1" />
-              <span className="text-blue-500 font-medium">{activeEvents} Active Events</span>
+              <span className="text-blue-500 font-medium">
+                {activeEvents} Active Events
+              </span>
             </div>
           </div>
         </div>
@@ -129,8 +135,12 @@ export default async function DashboardPage() {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Donations</p>
-              <p className="text-2xl font-bold text-gray-900">${totalDonated._sum.amount?.toFixed(2) || '0.00'}</p>
+              <p className="text-sm font-medium text-gray-600">
+                Total Donations
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                ${totalDonated._sum.amount?.toFixed(2) || "0.00"}
+              </p>
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
               <DollarSign className="h-6 w-6 text-purple-600" />
@@ -139,7 +149,9 @@ export default async function DashboardPage() {
           <div className="mt-4">
             <div className="flex items-center text-sm">
               <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-green-500 font-medium">{donationsCount} Campaigns</span>
+              <span className="text-green-500 font-medium">
+                {donationsCount} Campaigns
+              </span>
             </div>
           </div>
         </div>
@@ -148,7 +160,9 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Content</p>
-              <p className="text-2xl font-bold text-gray-900">{blogsCount + forumsCount}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {blogsCount + forumsCount}
+              </p>
             </div>
             <div className="p-3 bg-orange-100 rounded-full">
               <FileText className="h-6 w-6 text-orange-600" />
@@ -157,7 +171,9 @@ export default async function DashboardPage() {
           <div className="mt-4">
             <div className="flex items-center text-sm">
               <MessageSquare className="h-4 w-4 text-blue-500 mr-1" />
-              <span className="text-blue-500 font-medium">{forumsCount} Active Forums</span>
+              <span className="text-blue-500 font-medium">
+                {forumsCount} Active Forums
+              </span>
             </div>
           </div>
         </div>
@@ -172,7 +188,10 @@ export default async function DashboardPage() {
           </div>
           <div className="divide-y">
             {recentUsers.map((user) => (
-              <div key={user.id} className="p-4 flex items-center justify-between">
+              <div
+                key={user.id}
+                className="p-4 flex items-center justify-between"
+              >
                 <div className="flex items-center space-x-4">
                   <div className="relative">
                     <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -187,12 +206,18 @@ export default async function DashboardPage() {
                         <Users className="h-5 w-5 text-gray-500" />
                       )}
                     </div>
-                    <div className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
-                      user.membershipStatus === 'ACTIVE' ? 'bg-green-500' : 'bg-yellow-500'
-                    }`} />
+                    <div
+                      className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
+                        user.membershipStatus === "ACTIVE"
+                          ? "bg-green-500"
+                          : "bg-yellow-500"
+                      }`}
+                    />
                   </div>
                   <div>
-                    <p className="font-medium">{user.firstName} {user.lastName}</p>
+                    <p className="font-medium">
+                      {user.firstName} {user.lastName}
+                    </p>
                     <p className="text-sm text-gray-500">{user.email}</p>
                   </div>
                 </div>
@@ -203,7 +228,10 @@ export default async function DashboardPage() {
             ))}
           </div>
           <div className="p-4 border-t">
-            <Link href="/members" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+            <Link
+              href="/members"
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
               View All Members →
             </Link>
           </div>
@@ -237,14 +265,22 @@ export default async function DashboardPage() {
                 <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
                   <div
                     className="bg-blue-600 h-1.5 rounded-full"
-                    style={{ width: `${Math.min((event._count.attendees / event.capacity) * 100, 100)}%` }}
+                    style={{
+                      width: `${Math.min(
+                        (event._count.attendees / event.capacity) * 100,
+                        100
+                      )}%`,
+                    }}
                   />
                 </div>
               </div>
             ))}
           </div>
           <div className="p-4 border-t">
-            <Link href="/events" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+            <Link
+              href="/events"
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
               View All Events →
             </Link>
           </div>
@@ -263,12 +299,12 @@ export default async function DashboardPage() {
                 <div>
                   <h3 className="font-medium">{donation.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">
-                    Latest donor: {donation.donors[0]?.name || 'No donors yet'}
+                    Latest donor: {donation.donors[0]?.name || "No donors yet"}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="font-medium text-green-600">
-                    ${donation.donors[0]?.amount.toFixed(2) || '0.00'}
+                    ${donation.donors[0]?.amount.toFixed(2) || "0.00"}
                   </p>
                   <p className="text-sm text-gray-500">
                     {new Date(donation.createdAt).toLocaleDateString()}
@@ -281,13 +317,24 @@ export default async function DashboardPage() {
                     <div
                       className="bg-green-600 h-1.5 rounded-full"
                       style={{
-                        width: `${Math.min((donation.donors.reduce((sum, donor) => sum + donor.amount, 0) / donation.goal) * 100, 100)}%`
+                        width: `${Math.min(
+                          (donation.donors.reduce(
+                            (sum, donor) => sum + donor.amount,
+                            0
+                          ) /
+                            donation.goal) *
+                            100,
+                          100
+                        )}%`,
                       }}
                     />
                   </div>
                   <div className="flex justify-between mt-1 text-sm text-gray-500">
                     <span>
-                      ${donation.donors.reduce((sum, donor) => sum + donor.amount, 0).toFixed(2)}
+                      $
+                      {donation.donors
+                        .reduce((sum, donor) => sum + donor.amount, 0)
+                        .toFixed(2)}
                     </span>
                     <span>Goal: ${donation.goal.toFixed(2)}</span>
                   </div>
@@ -297,7 +344,10 @@ export default async function DashboardPage() {
           ))}
         </div>
         <div className="p-4 border-t">
-          <Link href="/donations" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+          <Link
+            href="/donations"
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
             View All Donations →
           </Link>
         </div>

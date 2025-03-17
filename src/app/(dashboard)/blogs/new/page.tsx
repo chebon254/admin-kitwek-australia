@@ -11,9 +11,11 @@ export default function NewBlogPage() {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [blogTag, setBlogTag] = useState("Blog");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,21 +49,18 @@ export default function NewBlogPage() {
         return;
       }
 
-      // Upload thumbnail
       const thumbnailUrl = await uploadFile(thumbnail, "blogs");
-
-      // Upload additional files if any
       const fileUrls = await Promise.all(
         files.map(file => uploadFile(file, "blogs"))
       );
 
-      // Create blog post
       const response = await fetch("/api/blogs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
           description,
+          blogTag,
           thumbnail: thumbnailUrl,
           files: fileUrls,
         }),
@@ -71,8 +70,10 @@ export default function NewBlogPage() {
         throw new Error("Failed to create blog post");
       }
 
-      toast.success("Blog post created successfully");
-      router.push("/blogs");
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/blogs");
+      }, 5000);
     } catch (error) {
       console.error("Error creating blog:", error);
       toast.error("Failed to create blog post");

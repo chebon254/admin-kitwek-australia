@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
+import { SuccessNotification } from "@/components/SuccessNotification";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -25,6 +26,7 @@ export default function EditEventPage({ params }: PageProps) {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [status, setStatus] = useState("UPCOMING");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -43,7 +45,6 @@ export default function EditEventPage({ params }: PageProps) {
         setStatus(event.status);
         setThumbnailPreview(event.thumbnail);
 
-        // Split date and time
         const eventDate = new Date(event.date);
         setDate(eventDate.toISOString().split('T')[0]);
         setTime(eventDate.toTimeString().slice(0, 5));
@@ -81,7 +82,6 @@ export default function EditEventPage({ params }: PageProps) {
         return;
       }
 
-      // Combine date and time
       const eventDateTime = new Date(`${date}T${time}`);
 
       let thumbnailUrl = thumbnailPreview;
@@ -109,8 +109,10 @@ export default function EditEventPage({ params }: PageProps) {
         throw new Error("Failed to update event");
       }
 
-      toast.success("Event updated successfully");
-      router.push("/events");
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/events");
+      }, 5000);
     } catch (error) {
       console.error("Error updating event:", error);
       toast.error("Failed to update event");
@@ -306,6 +308,13 @@ export default function EditEventPage({ params }: PageProps) {
           </button>
         </div>
       </form>
+
+      {showSuccess && (
+        <SuccessNotification
+          message="Event was updated successfully!"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
+import { SuccessNotification } from "@/components/SuccessNotification";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -20,6 +21,7 @@ export default function EditDonationPage({ params }: PageProps) {
   const [endDate, setEndDate] = useState<string>("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchDonation = async () => {
@@ -84,8 +86,10 @@ export default function EditDonationPage({ params }: PageProps) {
         throw new Error("Failed to update donation campaign");
       }
 
-      toast.success("Donation campaign updated successfully");
-      router.push("/donations");
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/donations");
+      }, 5000);
     } catch (error) {
       console.error("Error updating donation:", error);
       toast.error("Failed to update donation campaign");
@@ -197,6 +201,13 @@ export default function EditDonationPage({ params }: PageProps) {
           </button>
         </div>
       </form>
+
+      {showSuccess && (
+        <SuccessNotification
+          message="Donation campaign was updated successfully!"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 }
