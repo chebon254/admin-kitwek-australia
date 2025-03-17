@@ -120,7 +120,7 @@ export default function EditForumPage({ params }: PageProps) {
 
       {showSuccess && (
         <SuccessNotification
-          message="Forum was updated successfully!"
+          message="Forum was edited successfully! Redirecting..."
           onClose={() => setShowSuccess(false)}
         />
       )}

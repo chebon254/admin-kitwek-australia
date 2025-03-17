@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { email, name, password } = body;
+    const { email, name, firstName, lastName, password } = body;
 
     if (!email) {
       return new NextResponse("Email is required", { status: 400 });
@@ -49,6 +49,10 @@ export async function POST(request: Request) {
 
     if (!password) {
       return new NextResponse("Password is required", { status: 400 });
+    }
+
+    if (!name) {
+      return new NextResponse("Username is required", { status: 400 });
     }
 
     // Check if admin already exists
@@ -63,10 +67,11 @@ export async function POST(request: Request) {
     try {
       // Create user in Clerk with password
       const clerkUser = await clerk.users.createUser({
-        emailAddress: [email],
-        firstName: name?.split(' ')[0] || undefined,
-        lastName: name?.split(' ').slice(1).join(' ') || undefined,
-        password: password,
+        emailAddress: email,
+        username: name,
+        password,
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
       });
 
       // Create admin in database
@@ -74,7 +79,9 @@ export async function POST(request: Request) {
         data: {
           id: clerkUser.id,
           email,
-          name: name || null,
+          name,
+          firstName: firstName || null,
+          lastName: lastName || null,
         },
       });
 
@@ -93,10 +100,7 @@ export async function POST(request: Request) {
       console.error("[CLERK_CREATE_USER]", clerkError);
 
       // Handle specific Clerk errors
-      if (
-        clerkError.errors &&
-        clerkError.errors[0]?.message?.includes("already exists")
-      ) {
+      if (clerkError.errors?.[0]?.message?.includes("already exists")) {
         return new NextResponse("User with this email already exists in authentication system", { status: 400 });
       }
 

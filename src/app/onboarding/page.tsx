@@ -10,7 +10,9 @@ import Image from "next/image"
 export default function OnboardingPage() {
   const { user } = useUser();
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -18,15 +20,16 @@ export default function OnboardingPage() {
   const [uploadAttempt, setUploadAttempt] = useState(0);
 
   useEffect(() => {
-    if (user?.fullName) {
-      setName(user.fullName);
+    if (user) {
+      setUsername(user.username || "");
+      setFirstName(user.firstName || "");
+      setLastName(user.lastName || "");
     }
-  }, [user?.fullName]);
+  }, [user]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Image size exceeds 5MB limit");
         return;
@@ -34,7 +37,6 @@ export default function OnboardingPage() {
       
       setImage(file);
       
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -57,8 +59,8 @@ export default function OnboardingPage() {
         return;
       }
 
-      if (!name.trim()) {
-        toast.error("Please enter your name");
+      if (!username.trim()) {
+        toast.error("Please enter a username");
         setLoading(false);
         return;
       }
@@ -67,18 +69,16 @@ export default function OnboardingPage() {
       const uploadToast = toast.loading("Uploading image...");
       let imageUrl;
       try {
-        // Show progress indicator with slower progression
         const progressInterval = setInterval(() => {
           setUploadProgress(prev => {
-            const newProgress = prev + 2; // Slower progress to account for longer upload time
-            return newProgress > 90 ? 90 : newProgress; // Cap at 90% until complete
+            const newProgress = prev + 2;
+            return newProgress > 90 ? 90 : newProgress;
           });
         }, 500);
 
-        // Track retry attempts
         const attemptInterval = setInterval(() => {
           setUploadAttempt(prev => prev + 1);
-        }, 10000); // Update attempt counter every 10 seconds
+        }, 10000);
 
         imageUrl = await uploadFile(image, "admin-profiles");
         
@@ -107,60 +107,37 @@ export default function OnboardingPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name: name.trim(),
+            name: username.trim(),
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
             profileImage: imageUrl,
           }),
         });
 
-        let responseData = "";
-        try {
-          responseData = await response.text();
-        } catch (e) {
-          console.error("Error reading response text:", e);
-        }
-
         if (!response.ok) {
-          let errorMessage = "Failed to save profile";
-
-          try {
-            const jsonData = JSON.parse(responseData);
-            errorMessage = jsonData.message || errorMessage;
-          } catch (e) {
-            console.error("error", e);
-            errorMessage = responseData || errorMessage;
-          }
-
-          throw new Error(errorMessage);
+          throw new Error(await response.text());
         }
 
-        // Then update Clerk profile
+        // Update Clerk profile
         if (user) {
-          const nameParts = name.trim().split(" ");
-          const firstName = nameParts[0];
-          const lastName = nameParts.slice(1).join(" ");
-
           try {
-            // Update Clerk user data with correct parameter names
             await user.update({
-              firstName: firstName,
-              lastName: lastName || undefined,
+              username: username.trim(),
+              firstName: firstName.trim(),
+              lastName: lastName.trim(),
             });
 
-            // Set profile image separately
             await user.setProfileImage({
               file: image,
             });
           } catch (clerkError) {
             console.error("Error updating Clerk profile:", clerkError);
-            // Continue despite Clerk update error
-            // The user has been saved in the database, so we can proceed
           }
         }
 
         toast.dismiss(saveToast);
         toast.success("Profile updated successfully");
 
-        // Add a small delay before redirecting to ensure state is updated
         setTimeout(() => {
           router.push("/dashboard");
         }, 500);
@@ -185,17 +162,44 @@ export default function OnboardingPage() {
         <form onSubmit={onSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Name
+              Username
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full p-2 border rounded-md"
               required
               disabled={loading}
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              First Name
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full p-2 border rounded-md"
+              disabled={loading}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Last Name
+            </label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full p-2 border rounded-md"
+              disabled={loading}
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Profile Image (Max 5MB)

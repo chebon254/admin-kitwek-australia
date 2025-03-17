@@ -311,7 +311,7 @@ export default function EditEventPage({ params }: PageProps) {
 
       {showSuccess && (
         <SuccessNotification
-          message="Event was updated successfully!"
+          message="Event was edited successfully! Redirecting..."
           onClose={() => setShowSuccess(false)}
         />
       )}

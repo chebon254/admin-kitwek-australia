@@ -269,7 +269,7 @@ export default function EditBlogPage({ params }: PageProps) {
 
       {showSuccess && (
         <SuccessNotification
-          message="Blog was updated successfully!"
+          message="Blog was edited successfully! Redirecting..."
           onClose={() => setShowSuccess(false)}
         />
       )}

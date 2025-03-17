@@ -254,7 +254,7 @@ export default function NewEventPage() {
       </form>
       {showSuccess && (
         <SuccessNotification
-          message="Blog was added successfully!"
+          message="Event was added successfully! Redirecting..."
           onClose={() => setShowSuccess(false)}
         />
       )}

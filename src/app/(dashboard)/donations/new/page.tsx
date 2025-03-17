@@ -170,7 +170,7 @@ export default function NewDonationPage() {
       </form>
       {showSuccess && (
         <SuccessNotification
-          message="Blog was added successfully!"
+          message="Donations was added successfully! Redirecting..."
           onClose={() => setShowSuccess(false)}
         />
       )}

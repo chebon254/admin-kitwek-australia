@@ -84,7 +84,7 @@ export default function NewForumPage() {
       </form>
       {showSuccess && (
         <SuccessNotification
-          message="Blog was added successfully!"
+          message="Forum was added successfully! Redirecting..."
           onClose={() => setShowSuccess(false)}
         />
       )}

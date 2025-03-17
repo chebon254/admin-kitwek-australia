@@ -204,7 +204,7 @@ export default function EditDonationPage({ params }: PageProps) {
 
       {showSuccess && (
         <SuccessNotification
-          message="Donation campaign was updated successfully!"
+          message="Donation campaign was edited successfully! Redirecting..."
           onClose={() => setShowSuccess(false)}
         />
       )}
