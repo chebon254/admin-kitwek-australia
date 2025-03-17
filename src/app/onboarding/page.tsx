@@ -5,7 +5,8 @@ import { useUser } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import { useRouter } from "next/navigation";
-import Image from "next/image"
+import Image from "next/image";
+import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function OnboardingPage() {
   const { user } = useUser();
@@ -18,6 +19,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadAttempt, setUploadAttempt] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -34,9 +36,9 @@ export default function OnboardingPage() {
         toast.error("Image size exceeds 5MB limit");
         return;
       }
-      
+
       setImage(file);
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -70,28 +72,30 @@ export default function OnboardingPage() {
       let imageUrl;
       try {
         const progressInterval = setInterval(() => {
-          setUploadProgress(prev => {
+          setUploadProgress((prev) => {
             const newProgress = prev + 2;
             return newProgress > 90 ? 90 : newProgress;
           });
         }, 500);
 
         const attemptInterval = setInterval(() => {
-          setUploadAttempt(prev => prev + 1);
+          setUploadAttempt((prev) => prev + 1);
         }, 10000);
 
         imageUrl = await uploadFile(image, "admin-profiles");
-        
+
         clearInterval(progressInterval);
         clearInterval(attemptInterval);
         setUploadProgress(100);
-        
+
         toast.dismiss(uploadToast);
         toast.success("Image uploaded successfully");
       } catch (error) {
         console.error("Error", error);
         toast.dismiss(uploadToast);
-        toast.error(error instanceof Error ? error.message : "Failed to upload image");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to upload image"
+        );
         setLoading(false);
         return;
       }
@@ -138,9 +142,10 @@ export default function OnboardingPage() {
         toast.dismiss(saveToast);
         toast.success("Profile updated successfully");
 
+        setShowSuccess(true);
         setTimeout(() => {
           router.push("/dashboard");
-        }, 500);
+        }, 5000);
       } catch (error) {
         toast.dismiss(saveToast);
         throw error;
@@ -214,9 +219,9 @@ export default function OnboardingPage() {
             />
             {imagePreview && (
               <div className="mt-2 relative h-32 w-32 mx-auto rounded-full overflow-hidden border-2 border-gray-200">
-                <Image 
-                  src={imagePreview} 
-                  alt="Profile preview" 
+                <Image
+                  src={imagePreview}
+                  alt="Profile preview"
                   className="object-cover w-full h-full rounded-full"
                   height={200}
                   width={200}
@@ -224,28 +229,29 @@ export default function OnboardingPage() {
               </div>
             )}
             <p className="text-xs text-gray-500 mt-1">
-              Recommended: Square image, max 5MB. Larger images will be automatically compressed.
+              Recommended: Square image, max 5MB. Larger images will be
+              automatically compressed.
             </p>
           </div>
-          
+
           {loading && uploadProgress > 0 && (
             <div className="space-y-2">
               <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
               <p className="text-xs text-gray-500 text-center">
-                {uploadProgress < 100 
-                  ? uploadAttempt > 0 
-                    ? `Uploading... (Attempt ${uploadAttempt})` 
-                    : 'Uploading...' 
-                  : 'Upload complete'}
+                {uploadProgress < 100
+                  ? uploadAttempt > 0
+                    ? `Uploading... (Attempt ${uploadAttempt})`
+                    : "Uploading..."
+                  : "Upload complete"}
               </p>
             </div>
           )}
-          
+
           <button
             type="submit"
             disabled={loading}
@@ -254,6 +260,12 @@ export default function OnboardingPage() {
             {loading ? "Saving..." : "Complete Profile"}
           </button>
         </form>
+        {showSuccess && (
+          <SuccessNotification
+            message="Profile updated successfully! Redirecting..."
+            onClose={() => setShowSuccess(false)}
+          />
+        )}
       </div>
     </div>
   );
