@@ -11,11 +11,11 @@ export default function NewBlogPage() {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [blogTag] = useState("Blog");
+  const [blogTag, setBlogTag] = useState("Blog");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
-  const [, setShowSuccess] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,8 +84,8 @@ export default function NewBlogPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Create New Blog Post</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <h1 className="text-2xl font-bold mb-6">Create New Blog Post</h1>
+    <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Title
@@ -111,6 +111,22 @@ export default function NewBlogPage() {
             required
             disabled={loading}
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Blog Type
+          </label>
+          <select
+            value={blogTag}
+            onChange={(e) => setBlogTag(e.target.value)}
+            className="w-full p-2 border rounded-md"
+            required
+            disabled={loading}
+          >
+            <option value="Blog">Blog</option>
+            <option value="News">News</option>
+          </select>
         </div>
 
         <div>
@@ -176,6 +192,12 @@ export default function NewBlogPage() {
           {loading ? "Creating..." : "Create Blog Post"}
         </button>
       </form>
+      {showSuccess && (
+        <SuccessNotification
+          message="Blog was added successfully!"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 }
