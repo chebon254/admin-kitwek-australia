@@ -16,8 +16,8 @@ export function SuccessNotification({ message, onClose }: SuccessNotificationPro
   }, [onClose]);
 
   return (
-    <div className="fixed bottom-4 right-2/4 flex items-center gap-2 bg-green-500 text-white px-10 py-10 rounded-lg shadow-lg animate-slide-up">
-      <span className='text-xs text-white'>{message}</span>
+    <div className="fixed bottom-4 right-2/4 flex items-center gap-2 bg-green-500 text-white px-10 py-5 rounded-lg shadow-lg animate-slide-up">
+      <span className='text-lg text-white font-bold'>{message}. Redirecting...</span>
       <button
         onClick={onClose}
         className="p-1 hover:bg-green-600 rounded-full transition-colors"
