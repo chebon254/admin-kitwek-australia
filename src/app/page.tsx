@@ -1,19 +1,26 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+'use client';
 
-export default async function Home() {
-  const { userId } = await auth();
+import { useEffect, useState } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
-  if (!userId) {
-    redirect("/sign-in");
-  } else {
-    redirect("/dashboard");
-  }
+export default function Home() {
+  const { isLoaded, userId } = useAuth();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (isLoaded) {
+      if (!userId) {
+        router.push('/sign-in');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [isLoaded, userId, router]);
+
   return (
-    <div className="py-6">
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
     </div>
   );
 }

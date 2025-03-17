@@ -25,6 +25,7 @@ export default async function DashboardPage() {
     eventsCount,
     forumsCount,
     donationsCount,
+    totalUsers,
     activeUsers,
     inactiveUsers,
     recentUsers,
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
     prisma.event.count({ where: { adminId: userId } }),
     prisma.forum.count({ where: { adminId: userId } }),
     prisma.donation.count({ where: { adminId: userId } }),
+    prisma.user.count(),
     prisma.user.count({ where: { membershipStatus: 'ACTIVE' } }),
     prisma.user.count({ where: { membershipStatus: 'INACTIVE' } }),
     prisma.user.findMany({
@@ -97,21 +99,23 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Members</p>
-              <div className="mt-2">
-                <p className="text-lg font-semibold text-green-600">
-                  {activeUsers} Active
-                </p>
-                <p className="text-lg font-semibold text-red-600">
-                  {inactiveUsers} Inactive
-                </p>
-              </div>
+              <p className="text-2xl font-bold text-gray-900">{totalUsers}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
               <Users className="h-6 w-6 text-blue-600" />
             </div>
           </div>
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-sm">
+                <span className="text-sm font-semibold text-green-600">
+                  {activeUsers} Active
+                </span>
+                <span className="text-sm font-semibold text-red-500">
+                  {inactiveUsers} Inactive
+                </span>
+            </div>
+          </div>
         </div>
-
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between">
             <div>
