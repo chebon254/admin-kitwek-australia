@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
+import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function NewBlogPage() {
   const router = useRouter();
