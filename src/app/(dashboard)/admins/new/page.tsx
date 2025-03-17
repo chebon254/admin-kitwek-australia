@@ -47,7 +47,7 @@ export default function NewAdminPage() {
       }
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/donations");
+        router.push("/admins");
       }, 5000);
     } catch (error) {
       console.error("Error creating admin:", error);
