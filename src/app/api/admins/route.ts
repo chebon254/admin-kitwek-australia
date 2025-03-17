@@ -65,9 +65,9 @@ export async function POST(request: Request) {
     }
 
     try {
-      // Create user in Clerk with password
+      // Create user in Clerk with password - emailAddress must be an array
       const clerkUser = await clerk.users.createUser({
-        emailAddress: email,
+        emailAddress: [email],
         username: name,
         password,
         firstName: firstName || undefined,
