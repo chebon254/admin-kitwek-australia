@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
+import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function NewDonationPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function NewDonationPage() {
   const [endDate, setEndDate] = useState<string>("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,8 +61,10 @@ export default function NewDonationPage() {
         throw new Error("Failed to create donation campaign");
       }
 
-      toast.success("Donation campaign created successfully");
-      router.push("/donations");
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/donations");
+      }, 5000);
     } catch (error) {
       console.error("Error creating donation:", error);
       toast.error("Failed to create donation campaign");
@@ -164,6 +168,12 @@ export default function NewDonationPage() {
           {loading ? "Creating..." : "Create Donation Campaign"}
         </button>
       </form>
+      {showSuccess && (
+        <SuccessNotification
+          message="Blog was added successfully!"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 }

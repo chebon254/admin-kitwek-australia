@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
+import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function NewEventPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function NewEventPage() {
   const [price, setPrice] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,7 +36,7 @@ export default function NewEventPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
 
@@ -74,8 +76,10 @@ export default function NewEventPage() {
         throw new Error("Failed to create event");
       }
 
-      toast.success("Event created successfully");
-      router.push("/events");
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/events");
+      }, 5000);
     } catch (error) {
       console.error("Error creating event:", error);
       toast.error("Failed to create event");
@@ -125,7 +129,7 @@ export default function NewEventPage() {
               value={date}
               onChange={(e) => setDate(e.target.value)}
               className="w-full p-2 border rounded-md"
-              min={new Date().toISOString().split('T')[0]}
+              min={new Date().toISOString().split("T")[0]}
               required
               disabled={loading}
             />
@@ -188,7 +192,9 @@ export default function NewEventPage() {
                 className="h-4 w-4 text-blue-600 rounded border-gray-300"
                 disabled={loading}
               />
-              <span className="ml-2 text-gray-700">Yes, this is a paid event</span>
+              <span className="ml-2 text-gray-700">
+                Yes, this is a paid event
+              </span>
             </div>
           </div>
         </div>
@@ -246,6 +252,12 @@ export default function NewEventPage() {
           {loading ? "Creating..." : "Create Event"}
         </button>
       </form>
+      {showSuccess && (
+        <SuccessNotification
+          message="Blog was added successfully!"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 }

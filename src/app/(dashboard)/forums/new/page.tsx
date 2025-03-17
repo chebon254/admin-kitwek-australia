@@ -3,16 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function NewForumPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
 
@@ -29,8 +31,10 @@ export default function NewForumPage() {
         throw new Error("Failed to create forum");
       }
 
-      toast.success("Forum created successfully");
-      router.push("/forums");
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/forums");
+      }, 5000);
     } catch (error) {
       console.error("Error creating forum:", error);
       toast.error("Failed to create forum");
@@ -78,6 +82,12 @@ export default function NewForumPage() {
           {loading ? "Creating..." : "Create Forum"}
         </button>
       </form>
+      {showSuccess && (
+        <SuccessNotification
+          message="Blog was added successfully!"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 }
