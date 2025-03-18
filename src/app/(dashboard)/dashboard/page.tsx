@@ -107,11 +107,11 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-4">
             <div className="flex items-center justify-between text-sm">
-                <span className="text-sm font-semibold text-green-600">
-                  {activeUsers} Active
+                <span className="text-sm font-medium text-green-600">
+                  <span className="font-semibold">{activeUsers}</span> Active
                 </span>
-                <span className="text-sm font-semibold text-red-500">
-                  {inactiveUsers} Inactive
+                <span className="text-sm font-medium text-red-500">
+                  <span className="font-semibold">{inactiveUsers}</span> Inactive
                 </span>
             </div>
           </div>
