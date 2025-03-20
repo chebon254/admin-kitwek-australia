@@ -6,18 +6,20 @@ import Image from "next/image";
 import { Pencil, Newspaper, BookOpen } from "lucide-react";
 import { DeleteButton } from "@/components/Delete/DeleteButton";
 
-// Remove the custom PageProps interface entirely
-export default async function BlogsPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+// Define the props with promises as required by Next.js 14
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export default async function BlogsPage(props: {
+  searchParams: SearchParams
 }) {
   const { userId } = await auth();
-
+  
   if (!userId) {
     redirect("/sign-in");
   }
-
+  
+  // Await the searchParams promise
+  const searchParams = await props.searchParams;
   const filter = searchParams.filter as string || 'all';
   
   const blogs = await prisma.blog.findMany({
