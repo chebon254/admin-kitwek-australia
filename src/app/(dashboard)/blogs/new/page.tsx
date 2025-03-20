@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,13 +6,12 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 import { SuccessNotification } from "@/components/SuccessNotification";
-import { RichTextEditor } from "@/components/RichTextEditor";
 
 export default function NewBlogPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("[]");
+  const [description, setDescription] = useState("");
   const [blogTag, setBlogTag] = useState("Blog");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
@@ -69,7 +68,7 @@ export default function NewBlogPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create content");
+        throw new Error("Failed to create blog post");
       }
 
       setShowSuccess(true);
@@ -77,8 +76,8 @@ export default function NewBlogPage() {
         router.push("/blogs");
       }, 5000);
     } catch (error) {
-      console.error("Error creating content:", error);
-      toast.error("Failed to create content");
+      console.error("Error creating blog:", error);
+      toast.error("Failed to create blog post");
     } finally {
       setLoading(false);
     }
@@ -86,8 +85,8 @@ export default function NewBlogPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Add New Content</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <h1 className="text-2xl font-bold mb-6">Create New Blog Post</h1>
+    <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Title
@@ -104,17 +103,20 @@ export default function NewBlogPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content
+            Description
           </label>
-          <RichTextEditor
+          <textarea
             value={description}
-            onChange={setDescription}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full p-2 border rounded-md h-32"
+            required
+            disabled={loading}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content Type
+            Blog Type
           </label>
           <select
             value={blogTag}
@@ -188,12 +190,12 @@ export default function NewBlogPage() {
           disabled={loading}
           className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
         >
-          {loading ? "Creating..." : "Add Content"}
+          {loading ? "Creating..." : "Create Blog Post"}
         </button>
       </form>
       {showSuccess && (
         <SuccessNotification
-          message="Content was added successfully! Redirecting..."
+          message="Blog was added successfully! Redirecting..."
           onClose={() => setShowSuccess(false)}
         />
       )}

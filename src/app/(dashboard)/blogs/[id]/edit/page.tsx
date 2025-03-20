@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 import { SuccessNotification } from "@/components/SuccessNotification";
-import { RichTextEditor } from "@/components/RichTextEditor";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -17,7 +16,7 @@ export default function EditBlogPage({ params }: PageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("[]");
+  const [description, setDescription] = useState("");
   const [blogTag, setBlogTag] = useState("Blog");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
@@ -30,7 +29,7 @@ export default function EditBlogPage({ params }: PageProps) {
       try {
         const { id } = await params;
         const response = await fetch(`/api/blogs/${id}`);
-        if (!response.ok) throw new Error('Content not found');
+        if (!response.ok) throw new Error('Blog not found');
         const blog = await response.json();
         
         setTitle(blog.title);
@@ -39,8 +38,8 @@ export default function EditBlogPage({ params }: PageProps) {
         setThumbnailPreview(blog.thumbnail);
         setCurrentFiles(blog.files || []);
       } catch (error) {
-        console.error('Error fetching content:', error);
-        toast.error('Failed to load content');
+        console.error('Error fetching blog:', error);
+        toast.error('Failed to load blog');
         router.push('/blogs');
       }
     };
@@ -104,7 +103,7 @@ export default function EditBlogPage({ params }: PageProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update content");
+        throw new Error("Failed to update blog post");
       }
 
       setShowSuccess(true);
@@ -112,8 +111,8 @@ export default function EditBlogPage({ params }: PageProps) {
         router.push("/blogs");
       }, 5000);
     } catch (error) {
-      console.error("Error updating content:", error);
-      toast.error("Failed to update content");
+      console.error("Error updating blog:", error);
+      toast.error("Failed to update blog post");
     } finally {
       setLoading(false);
     }
@@ -121,7 +120,7 @@ export default function EditBlogPage({ params }: PageProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Edit Content</h1>
+      <h1 className="text-2xl font-bold mb-6">Edit Blog Post</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -139,17 +138,20 @@ export default function EditBlogPage({ params }: PageProps) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content
+            Description
           </label>
-          <RichTextEditor
+          <textarea
             value={description}
-            onChange={setDescription}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full p-2 border rounded-md h-32"
+            required
+            disabled={loading}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content Type
+            Blog Type
           </label>
           <select
             value={blogTag}
@@ -260,14 +262,14 @@ export default function EditBlogPage({ params }: PageProps) {
             disabled={loading}
             className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {loading ? "Updating..." : "Update Content"}
+            {loading ? "Updating..." : "Update Blog Post"}
           </button>
         </div>
       </form>
 
       {showSuccess && (
         <SuccessNotification
-          message="Content was updated successfully! Redirecting..."
+          message="Blog was edited successfully! Redirecting..."
           onClose={() => setShowSuccess(false)}
         />
       )}
