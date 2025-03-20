@@ -24,7 +24,7 @@ export default function DashboardNav({ user, unreadNotifications }: DashboardNav
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <NavLink href="/dashboard">Dashboard</NavLink>
               <NavLink href="/members">Members</NavLink>
-              <NavLink href="/blogs">News</NavLink>
+              <NavLink href="/blogs">News&Blogs</NavLink>
               <NavLink href="/events">Events</NavLink>
               <NavLink href="/donations">Donations</NavLink>
               <NavLink href="/forums">Forums</NavLink>

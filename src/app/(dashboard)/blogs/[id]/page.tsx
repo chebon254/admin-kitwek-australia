@@ -10,8 +10,13 @@ interface Props {
   }>;
 }
 
-export default async function BlogDetailPage({params}: Props) {
+interface Block {
+  id: string;
+  type: 'paragraph' | 'heading' | 'list' | 'bold';
+  content: string;
+}
 
+export default async function BlogDetailPage({params}: Props) {
   const { userId } = await auth();
 
   if (!userId) {
@@ -29,8 +34,14 @@ export default async function BlogDetailPage({params}: Props) {
   }
 
   const files = blog.files as string[] || [];
+  let blocks: Block[] = [];
+  
+  try {
+    blocks = JSON.parse(blog.description);
+  } catch {
+    blocks = [{ id: '1', type: 'paragraph', content: blog.description }];
+  }
 
-  // Helper function to get file type
   const getFileType = (url: string) => {
     const extension = url.split('.').pop()?.toLowerCase();
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) return 'image';
@@ -40,20 +51,44 @@ export default async function BlogDetailPage({params}: Props) {
     return 'other';
   };
 
+  const renderBlock = (block: Block) => {
+    switch (block.type) {
+      case 'heading':
+        return <h2 className="text-2xl font-bold mb-4">{block.content}</h2>;
+      case 'list':
+        return <li className="ml-6 mb-2">• {block.content}</li>;
+      case 'bold':
+        return <p className="font-bold mb-4">{block.content}</p>;
+      default:
+        return <p className="mb-4">{block.content}</p>;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Blog Details</h1>
-        <Link
-          href="/blogs"
-          className="text-blue-600 hover:text-blue-800"
-        >
-          Back to Blogs
-        </Link>
+        <h1 className="text-2xl font-bold">Content Details</h1>
+        <div className="flex gap-4">
+          <Link
+            href={`/blogs/${id}/edit`}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Edit
+          </Link>
+          <Link
+            href="/blogs"
+            className="text-blue-600 hover:text-blue-800"
+          >
+            Back to List
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="relative h-[400px] w-full">
+          <div className="absolute top-4 right-4 z-10 bg-white px-3 py-1 rounded-full">
+            {blog.blogTag}
+          </div>
           <Image
             src={blog.thumbnail}
             alt={blog.title}
@@ -63,8 +98,13 @@ export default async function BlogDetailPage({params}: Props) {
         </div>
         
         <div className="p-6">
-          <h2 className="text-3xl font-bold mb-4">{blog.title}</h2>
-          <p className="text-gray-600 mb-6 whitespace-pre-wrap">{blog.description}</p>
+          <h2 className="text-3xl font-bold mb-6">{blog.title}</h2>
+          
+          <div className="prose max-w-none">
+            {blocks.map((block) => (
+              <div key={block.id}>{renderBlock(block)}</div>
+            ))}
+          </div>
           
           {files.length > 0 && (
             <div className="mt-8">
@@ -77,7 +117,6 @@ export default async function BlogDetailPage({params}: Props) {
                       key={index}
                       className="border rounded-lg overflow-hidden bg-gray-50"
                     >
-                      {/* Preview Section */}
                       <div className="h-40 relative bg-gray-100">
                         {fileType === 'image' ? (
                           <Image
@@ -98,7 +137,6 @@ export default async function BlogDetailPage({params}: Props) {
                         )}
                       </div>
                       
-                      {/* Download Button */}
                       <div className="p-3 bg-white">
                         <a
                           href={file}
