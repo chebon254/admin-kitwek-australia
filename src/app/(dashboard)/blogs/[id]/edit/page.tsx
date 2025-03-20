@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -29,18 +29,18 @@ export default function EditBlogPage({ params }: PageProps) {
       try {
         const { id } = await params;
         const response = await fetch(`/api/blogs/${id}`);
-        if (!response.ok) throw new Error('Blog not found');
+        if (!response.ok) throw new Error("Blog not found");
         const blog = await response.json();
-        
+
         setTitle(blog.title);
         setDescription(blog.description);
         setBlogTag(blog.blogTag || "Blog");
         setThumbnailPreview(blog.thumbnail);
         setCurrentFiles(blog.files || []);
       } catch (error) {
-        console.error('Error fetching blog:', error);
-        toast.error('Failed to load blog');
-        router.push('/blogs');
+        console.error("Error fetching blog:", error);
+        toast.error("Failed to load blog");
+        router.push("/blogs");
       }
     };
 
@@ -61,20 +61,20 @@ export default function EditBlogPage({ params }: PageProps) {
 
   const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []);
-    setFiles(prevFiles => [...prevFiles, ...newFiles]);
+    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
   };
 
   const removeFile = (index: number) => {
-    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
   const removeCurrentFile = (index: number) => {
-    setCurrentFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+    setCurrentFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
       const { id } = await params;
@@ -85,7 +85,7 @@ export default function EditBlogPage({ params }: PageProps) {
       }
 
       const newFileUrls = await Promise.all(
-        files.map(file => uploadFile(file, "blogs"))
+        files.map((file) => uploadFile(file, "blogs"))
       );
 
       const allFiles = [...currentFiles, ...newFileUrls];
@@ -151,7 +151,7 @@ export default function EditBlogPage({ params }: PageProps) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Blog Type
+            Content Type
           </label>
           <select
             value={blogTag}
@@ -205,7 +205,7 @@ export default function EditBlogPage({ params }: PageProps) {
                     rel="noopener noreferrer"
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
-                    {file.split('/').pop()}
+                    {file.split("/").pop()}
                   </a>
                   <button
                     type="button"
@@ -252,7 +252,7 @@ export default function EditBlogPage({ params }: PageProps) {
         <div className="flex gap-4">
           <button
             type="button"
-            onClick={() => router.push('/blogs')}
+            onClick={() => router.push("/blogs")}
             className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition"
           >
             Cancel

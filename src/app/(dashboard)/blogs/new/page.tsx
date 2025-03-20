@@ -116,7 +116,7 @@ export default function NewBlogPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Blog Type
+            Content Type
           </label>
           <select
             value={blogTag}
