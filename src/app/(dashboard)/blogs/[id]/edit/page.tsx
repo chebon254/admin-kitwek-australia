@@ -120,7 +120,7 @@ export default function EditBlogPage({ params }: PageProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Edit Blog Post</h1>
+      <h1 className="text-2xl font-bold mb-6">Edit Content</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
