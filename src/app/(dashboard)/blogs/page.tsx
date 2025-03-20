@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -6,25 +6,25 @@ import Image from "next/image";
 import { Pencil, Newspaper, BookOpen } from "lucide-react";
 import { DeleteButton } from "@/components/Delete/DeleteButton";
 
-export default async function BlogsPage({
-  searchParams,
-}: {
-  searchParams: { filter?: string };
-}) {
+interface PageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default async function BlogsPage({ searchParams }: PageProps) {
   const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in");
   }
 
-  const filter = searchParams.filter || 'all';
-  
+  const filter = (searchParams.filter as string) || "all";
+
   const blogs = await prisma.blog.findMany({
     where: {
       adminId: userId,
-      ...(filter !== 'all' ? { blogTag: filter } : {}),
+      ...(filter !== "all" ? { blogTag: filter } : {}),
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   return (
@@ -44,9 +44,9 @@ export default async function BlogsPage({
           <Link
             href="/blogs"
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
-              filter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              filter === "all"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
             }`}
           >
             <BookOpen className="w-4 h-4" />
@@ -55,9 +55,9 @@ export default async function BlogsPage({
           <Link
             href="/blogs?filter=Blog"
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
-              filter === 'Blog'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              filter === "Blog"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
             }`}
           >
             <BookOpen className="w-4 h-4" />
@@ -66,9 +66,9 @@ export default async function BlogsPage({
           <Link
             href="/blogs?filter=News"
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
-              filter === 'News'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              filter === "News"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
             }`}
           >
             <Newspaper className="w-4 h-4" />
@@ -79,8 +79,12 @@ export default async function BlogsPage({
 
       {blogs.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Content Yet</h2>
-          <p className="text-gray-600 mb-4">Get started by creating your first piece of content.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            No Content Yet
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Get started by creating your first piece of content.
+          </p>
           <Link
             href="/blogs/new"
             className="inline-flex items-center text-blue-600 hover:text-blue-800"
@@ -91,7 +95,10 @@ export default async function BlogsPage({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {blogs.map((blog) => (
-            <div key={blog.id} className="bg-white rounded-lg shadow overflow-hidden">
+            <div
+              key={blog.id}
+              className="bg-white rounded-lg shadow overflow-hidden"
+            >
               <div className="relative h-48">
                 <div className="absolute top-2 right-2 z-10 bg-white px-2 py-1 rounded-full text-sm font-medium">
                   {blog.blogTag}
