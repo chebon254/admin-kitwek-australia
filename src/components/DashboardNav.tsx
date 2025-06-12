@@ -27,6 +27,7 @@ export default function DashboardNav({ user, unreadNotifications }: DashboardNav
               <NavLink href="/blogs">News&Blogs</NavLink>
               <NavLink href="/events">Events</NavLink>
               <NavLink href="/donations">Donations</NavLink>
+              <NavLink href="/voting">Voting</NavLink>
               <NavLink href="/forums">Forums</NavLink>
             </div>
           </div>

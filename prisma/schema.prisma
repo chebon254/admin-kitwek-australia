@@ -9,42 +9,44 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(uuid())
-  email           String    @unique
-  username        String?   @unique
-  password        String?
-  firstName       String?
-  lastName        String?
-  bio             String?   @db.Text
-  proffession     String?
-  phone           String?
-  profileImage    String?
-  memberNumber    String?   @unique
+  id               String   @id @default(uuid())
+  email            String   @unique
+  username         String?  @unique
+  password         String?
+  firstName        String?
+  lastName         String?
+  bio              String?  @db.Text
+  proffession      String?
+  phone            String?
+  profileImage     String?
+  memberNumber     String?  @unique
   membershipStatus String   @default("INACTIVE")
-  subscription    String    @default("Free")
-  revokeStatus    Boolean   @default(false)
-  revokeReason    String?   @db.Text
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  subscription     String   @default("Free")
+  revokeStatus     Boolean  @default(false)
+  revokeReason     String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
   stripeCustomerId String?  @unique
-  tickets         Ticket[]
+  tickets          Ticket[]
+  votes            Vote[]
 }
 
 model AdminUser {
-  id            String    @id
-  email         String    @unique
-  name          String?   // This will store the username
-  firstName     String?
-  lastName      String?
-  profileImage  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  blogs         Blog[]
-  events        Event[]
-  forums        Forum[]
-  donations     Donation[]
-  logs          AdminLog[]
-  notifications AdminNotification[]
+  id              String              @id
+  email           String              @unique
+  name            String?
+  profileImage    String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  firstName       String?
+  lastName        String?
+  blogs           Blog[]
+  events          Event[]
+  forums          Forum[]
+  donations       Donation[]
+  logs            AdminLog[]
+  notifications   AdminNotification[]
+  votingCampaigns VotingCampaign[]
 }
 
 model AdminLog {
@@ -61,7 +63,7 @@ model AdminLog {
 model AdminNotification {
   id        String    @id @default(uuid())
   adminId   String
-  type      String    // e.g., "NEW_USER", "NEW_DONATION", etc.
+  type      String
   message   String    @db.Text
   read      Boolean   @default(false)
   createdAt DateTime  @default(now())
@@ -75,82 +77,82 @@ model Blog {
   title       String
   description String    @db.Text
   thumbnail   String
-  files       Json?     // Array of file URLs
-  blogTag     String    @default("Blog") // New field with default value
+  files       Json?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   adminId     String
+  blogTag     String    @default("Blog")
   admin       AdminUser @relation(fields: [adminId], references: [id])
 
   @@index([adminId])
 }
 
 model Event {
-  id            String    @id @default(uuid())
-  title         String
-  description   String    @db.Text
-  thumbnail     String
-  date          DateTime
-  location      String
-  capacity      Int       @default(0)
-  remainingSlots Int      @default(0)
-  isPaid        Boolean   @default(false)
-  price         Float?
-  status        String    @default("UPCOMING") // UPCOMING, ONGOING, COMPLETED, CANCELLED
-  cancelReason  String?   @db.Text
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  adminId       String
-  admin         AdminUser @relation(fields: [adminId], references: [id])
-  tickets       Ticket[]
-  attendees     EventAttendee[]
+  id             String          @id @default(uuid())
+  title          String
+  description    String          @db.Text
+  thumbnail      String
+  date           DateTime
+  location       String
+  capacity       Int             @default(0)
+  remainingSlots Int             @default(0)
+  isPaid         Boolean         @default(false)
+  price          Float?
+  status         String          @default("UPCOMING")
+  cancelReason   String?         @db.Text
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  adminId        String
+  admin          AdminUser       @relation(fields: [adminId], references: [id])
+  tickets        Ticket[]
+  attendees      EventAttendee[]
 
   @@index([adminId])
 }
 
 model Ticket {
-  id            String    @id @default(uuid())
-  eventId       String
-  event         Event     @relation(fields: [eventId], references: [id])
-  userId        String?   // Optional: for logged-in users
-  user          User?     @relation(fields: [userId], references: [id])
-  quantity      Int
-  totalAmount   Float
-  status        String    @default("ACTIVE") // ACTIVE, USED, CANCELLED, REFUNDED
-  purchaseDate  DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  attendees     EventAttendee[]
+  id           String          @id @default(uuid())
+  eventId      String
+  userId       String?
+  quantity     Int
+  totalAmount  Float
+  status       String          @default("ACTIVE")
+  purchaseDate DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  event        Event           @relation(fields: [eventId], references: [id])
+  user         User?           @relation(fields: [userId], references: [id])
+  attendees    EventAttendee[]
 
   @@index([eventId])
   @@index([userId])
 }
 
 model EventAttendee {
-  id          String   @id @default(uuid())
-  eventId     String
-  ticketId    String?  // Optional: for linking to ticket
-  event       Event    @relation(fields: [eventId], references: [id])
-  ticket      Ticket?  @relation(fields: [ticketId], references: [id])
-  firstName   String
-  lastName    String
-  email       String
-  phone       String?
-  paid        Boolean  @default(false)
-  amount      Float?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  eventId   String
+  ticketId  String?
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  paid      Boolean  @default(false)
+  amount    Float?
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id])
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id])
 
   @@index([eventId])
   @@index([ticketId])
 }
 
 model Forum {
-  id          String    @id @default(uuid())
+  id          String         @id @default(uuid())
   title       String
-  description String    @db.Text
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  description String         @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   adminId     String
-  admin       AdminUser @relation(fields: [adminId], references: [id])
+  admin       AdminUser      @relation(fields: [adminId], references: [id])
   comments    ForumComment[]
 
   @@index([adminId])
@@ -173,8 +175,8 @@ model Donation {
   name        String
   description String    @db.Text
   thumbnail   String
-  goal        Float?    // Optional fundraising goal
-  endDate     DateTime? // Optional end date for the campaign
+  goal        Float?
+  endDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   adminId     String
@@ -196,4 +198,55 @@ model Donor {
   donation   Donation @relation(fields: [donationId], references: [id])
 
   @@index([donationId])
+}
+
+model VotingCampaign {
+  id          String            @id @default(uuid())
+  title       String
+  description String            @db.Text
+  startDate   DateTime
+  endDate     DateTime
+  status      String            @default("UPCOMING")
+  type        String
+  thumbnail   String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  adminId     String
+  admin       AdminUser         @relation(fields: [adminId], references: [id])
+  candidates  VotingCandidate[]
+  votes       Vote[]
+
+  @@index([adminId])
+}
+
+model VotingCandidate {
+  id          String         @id @default(uuid())
+  name        String
+  description String?        @db.Text
+  image       String?
+  position    String?
+  manifesto   String?        @db.Text
+  campaignId  String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  campaign    VotingCampaign @relation(fields: [campaignId], references: [id])
+  votes       Vote[]
+
+  @@index([campaignId])
+}
+
+model Vote {
+  id          String          @id @default(uuid())
+  userId      String
+  campaignId  String
+  candidateId String
+  createdAt   DateTime        @default(now())
+  user        User            @relation(fields: [userId], references: [id])
+  campaign    VotingCampaign  @relation(fields: [campaignId], references: [id])
+  candidate   VotingCandidate @relation(fields: [candidateId], references: [id])
+
+  @@unique([userId, campaignId])
+  @@index([userId])
+  @@index([campaignId])
+  @@index([candidateId])
 }

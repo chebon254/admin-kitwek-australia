@@ -4,14 +4,24 @@ import { Trash2 } from "lucide-react";
 
 interface DeleteButtonProps {
   id: string;
-  type: 'blog' | 'event' | 'donation' | 'forum';
+  type: 'blog' | 'event' | 'donation' | 'forum' | 'voting-campaign';
   onDelete?: () => void;
 }
 
 export function DeleteButton({ id, type, onDelete }: DeleteButtonProps) {
+  const getApiEndpoint = (type: string, id: string) => {
+    switch (type) {
+      case 'voting-campaign':
+        return `/api/voting/campaigns/${id}`;
+      default:
+        return `/api/${type}s/${id}`;
+    }
+  };
+
   const handleDelete = async () => {
     if (confirm(`Are you sure you want to delete this ${type}?`)) {
-      await fetch(`/api/${type}s/${id}`, {
+      const endpoint = getApiEndpoint(type, id);
+      await fetch(endpoint, {
         method: 'DELETE',
       });
       if (onDelete) {
