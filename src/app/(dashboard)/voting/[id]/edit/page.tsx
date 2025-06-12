@@ -1,9 +1,8 @@
-// src/app/(dashboard)/voting/[id]/edit/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, X, Upload, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Upload, Save, Trash2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";

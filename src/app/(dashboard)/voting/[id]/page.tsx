@@ -1,4 +1,3 @@
-// src/app/(dashboard)/voting/[id]/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -53,7 +52,6 @@ interface Campaign {
 
 export default function VotingCampaignDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,6 +117,7 @@ export default function VotingCampaignDetailPage() {
       await navigator.clipboard.writeText(publicVoteUrl);
       toast.success("Voting link copied to clipboard!");
     } catch (error) {
+      console.error("Error updating forum:", error);
       toast.error("Failed to copy link");
     }
   };

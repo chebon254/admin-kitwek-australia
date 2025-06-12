@@ -1,7 +1,15 @@
-// src/app/api/voting/campaigns/route.ts
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+
+// Define the candidate type for the request body
+interface CandidateInput {
+  name: string;
+  description?: string;
+  position?: string;
+  manifesto?: string;
+  image?: string;
+}
 
 export async function GET() {
   try {
@@ -85,7 +93,7 @@ export async function POST(req: Request) {
         thumbnail,
         adminId: userId,
         candidates: {
-          create: candidates.map((candidate: any) => ({
+          create: candidates.map((candidate: CandidateInput) => ({
             name: candidate.name,
             description: candidate.description,
             position: candidate.position,
