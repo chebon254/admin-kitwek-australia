@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const { userId } = await auth();
 
