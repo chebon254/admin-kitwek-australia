@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { User, Mail, Calendar, Clock, Shield, AlertTriangle } from "lucide-react";
+import { SuccessNotification } from "@/components/SuccessNotification";
 import toast from "react-hot-toast";
 
 interface MemberProps {
@@ -30,6 +31,8 @@ export default function MemberDetail({ member }: MemberProps) {
   const [loading, setLoading] = useState(false);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
   const [revokeReason, setRevokeReason] = useState("");
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   const handleResendActivation = async () => {
     try {
@@ -40,7 +43,11 @@ export default function MemberDetail({ member }: MemberProps) {
 
       if (!response.ok) throw new Error("Failed to resend activation email");
       
+      // Show both toast and custom notification
       toast.success("Activation email sent successfully");
+      setNotificationMessage(`Activation email has been sent to ${member.email}`);
+      setShowNotification(true);
+      
       router.refresh();
     } catch (error) {
       console.error("Error:", error);
@@ -62,6 +69,8 @@ export default function MemberDetail({ member }: MemberProps) {
       if (!response.ok) throw new Error("Failed to revoke member");
       
       toast.success("Member access revoked successfully");
+      setNotificationMessage(`Member access has been revoked for ${member.firstName} ${member.lastName}`);
+      setShowNotification(true);
       setShowRevokeModal(false);
       router.refresh();
     } catch (error) {
@@ -82,6 +91,8 @@ export default function MemberDetail({ member }: MemberProps) {
       if (!response.ok) throw new Error("Failed to approve member");
       
       toast.success("Member access restored successfully");
+      setNotificationMessage(`Member access has been restored for ${member.firstName} ${member.lastName}`);
+      setShowNotification(true);
       router.refresh();
     } catch (error) {
       console.error("Error:", error);
@@ -199,8 +210,11 @@ export default function MemberDetail({ member }: MemberProps) {
                 <button
                   onClick={handleResendActivation}
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
+                  {loading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  )}
                   Resend Activation Email
                 </button>
               )}
@@ -217,8 +231,11 @@ export default function MemberDetail({ member }: MemberProps) {
                 <button
                   onClick={handleApprove}
                   disabled={loading}
-                  className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
+                  {loading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  )}
                   Approve Access
                 </button>
               )}
@@ -252,13 +269,23 @@ export default function MemberDetail({ member }: MemberProps) {
               <button
                 onClick={handleRevoke}
                 disabled={!revokeReason.trim() || loading}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
               >
+                {loading && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                )}
                 Confirm Revoke
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {showNotification && (
+        <SuccessNotification
+          message={notificationMessage}
+          onClose={() => setShowNotification(false)}
+        />
       )}
     </div>
   );
