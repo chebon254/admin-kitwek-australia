@@ -31,8 +31,11 @@ export default async function WelfareApplicationsPage(props: {
   const type = searchParams.type as string || 'all';
   const search = searchParams.search as string || '';
 
-  // Build where clause
-  const whereClause: any = {};
+  // Build where clause with proper typing
+  const whereClause: {
+    status?: string;
+    applicationType?: string;
+  } = {};
   
   if (status !== 'all') {
     whereClause.status = status.toUpperCase();
@@ -78,7 +81,6 @@ export default async function WelfareApplicationsPage(props: {
   const totalApplications = applications.length;
   const pendingCount = applications.filter(a => a.status === 'PENDING').length;
   const approvedCount = applications.filter(a => a.status === 'APPROVED').length;
-  const rejectedCount = applications.filter(a => a.status === 'REJECTED').length;
   const totalClaimAmount = applications
     .filter(a => a.status === 'APPROVED')
     .reduce((sum, a) => sum + a.claimAmount, 0);

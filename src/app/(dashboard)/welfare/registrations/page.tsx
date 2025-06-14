@@ -5,9 +5,29 @@ import Link from "next/link";
 import { ArrowLeft, Search, Filter, Users, DollarSign, CheckCircle, Clock } from "lucide-react";
 import { WelfareRegistrationActions } from '@/components/welfare/WelfareRegistrationActions';
 import type { WelfareRegistrationWithUser } from '@/types/welfare';
+import { Prisma } from '@prisma/client';
 
 // Define the props with promises as required by Next.js 14
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+// Define the registration type with user relation
+type RegistrationWithUser = {
+  id: string;
+  status: string;
+  paymentStatus: string;
+  registrationDate: Date;
+  registrationFee: number;
+  createdAt: Date;
+  user: {
+    id: string;
+    email: string | null;
+    username: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    memberNumber: string | null;
+    membershipStatus: string | null;
+  } | null;
+};
 
 export default async function WelfareRegistrationsPage(props: {
   searchParams: SearchParams
@@ -22,8 +42,8 @@ export default async function WelfareRegistrationsPage(props: {
   const status = searchParams.status as string || 'all';
   const search = searchParams.search as string || '';
 
-  // Build where clause
-  const whereClause: any = {};
+  // Build where clause with proper Prisma types
+  const whereClause: Prisma.WelfareRegistrationWhereInput = {};
   
   if (status !== 'all') {
     if (status === 'active') {
@@ -72,7 +92,7 @@ export default async function WelfareRegistrationsPage(props: {
   const pendingCount = registrations.filter(r => r.paymentStatus === 'PENDING').length;
   const totalAmount = activeCount * 200;
 
-  const getStatusBadge = (registration: any) => {
+  const getStatusBadge = (registration: RegistrationWithUser): string => {
     if (registration.status === 'ACTIVE' && registration.paymentStatus === 'PAID') {
       return 'bg-green-100 text-green-800';
     } else if (registration.paymentStatus === 'PENDING') {
@@ -82,7 +102,7 @@ export default async function WelfareRegistrationsPage(props: {
     }
   };
 
-  const getStatusText = (registration: any) => {
+  const getStatusText = (registration: RegistrationWithUser): string => {
     if (registration.status === 'ACTIVE' && registration.paymentStatus === 'PAID') {
       return 'Active';
     } else if (registration.paymentStatus === 'PENDING') {

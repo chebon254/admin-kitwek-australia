@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from '@prisma/client';
 
 export async function GET(request: Request) {
   try {
@@ -15,8 +16,8 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
 
-    // Build where clause
-    const whereClause: any = {};
+    // Build where clause with proper Prisma type
+    const whereClause: Prisma.WelfareReimbursementWhereInput = {};
     if (status !== 'all') {
       whereClause.status = status.toUpperCase();
     }

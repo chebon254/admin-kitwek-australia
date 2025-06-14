@@ -9,8 +9,7 @@ import {
   Clock, 
   CheckCircle, 
   AlertTriangle,
-  FileText,
-  TrendingUp
+  FileText
 } from "lucide-react";
 
 export default async function WelfareDashboard() {

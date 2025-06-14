@@ -1,4 +1,3 @@
-// admin-kitwek-australia/src/app/(dashboard)/welfare/applications/[id]/page.tsx
 import { auth } from '@clerk/nextjs/server';
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -8,7 +7,6 @@ import {
   ArrowLeft, 
   FileText, 
   User, 
-  Calendar, 
   DollarSign, 
   Phone, 
   Mail,
