@@ -9,7 +9,7 @@ interface DocumentImagePreviewProps {
   fileName: string;
 }
 
-export function DocumentImagePreview({ src, alt, fileName }: DocumentImagePreviewProps) {
+export function DocumentImagePreview({ src, alt }: DocumentImagePreviewProps) {
   const [imageError, setImageError] = useState(false);
 
   if (imageError) {

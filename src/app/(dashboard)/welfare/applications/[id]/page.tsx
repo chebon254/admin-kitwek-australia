@@ -2,7 +2,6 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowLeft,
   FileText,
