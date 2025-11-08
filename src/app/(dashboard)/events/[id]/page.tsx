@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 import { Calendar, Clock, MapPin, Users, AlertTriangle } from "lucide-react";
 
 interface Props {
@@ -43,12 +43,12 @@ export default async function EventDetailPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Event Details</h1>
-        <Link
+        <LoadingLink
           href="/events"
-          className="text-blue-600 hover:text-blue-800"
+          className="text-blue-600 hover:text-blue-800 transition-colors"
         >
           Back to Events
-        </Link>
+        </LoadingLink>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

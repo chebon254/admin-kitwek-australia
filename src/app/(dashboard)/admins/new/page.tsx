@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 import toast from "react-hot-toast";
 import { SuccessNotification } from "@/components/SuccessNotification";
 
@@ -62,9 +62,9 @@ export default function NewAdminPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Link href="/admins" className="text-gray-500 hover:text-gray-700">
+        <LoadingLink href="/admins" className="text-gray-500 hover:text-gray-700">
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </LoadingLink>
         <h1 className="text-2xl font-bold">Create New Admin</h1>
       </div>
 

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import Link from "next/link";
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { User } from "lucide-react";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 
 interface Member {
   id: string;
@@ -122,12 +122,12 @@ export default function MembersList() {
                   </span>
                 )}
               </div>
-              <Link
+              <LoadingLink
                 href={`/members/${member.id}`}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
                 View Details
-              </Link>
+              </LoadingLink>
             </div>
           </div>
         </div>

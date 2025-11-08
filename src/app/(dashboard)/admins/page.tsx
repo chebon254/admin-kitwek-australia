@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import {
   UserPlus,
   Search,
@@ -11,6 +10,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import { LoadingLink } from "@/components/ui/LoadingLink";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface AdminUser {
   id: string;
@@ -24,6 +25,8 @@ export default function AdminsPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState<{ id: string; email: string } | null>(null);
 
   const superAdminEmail = "info@kitwekvictoria.org";
 
@@ -50,29 +53,36 @@ export default function AdminsPage() {
     }
   };
 
-  const handleDelete = async (id: string, email: string) => {
+  const handleDeleteClick = (id: string, email: string) => {
     // Prevent deleting super admin
     if (email === superAdminEmail) {
       toast.error("Cannot delete super admin account");
       return;
     }
+    setAdminToDelete({ id, email });
+    setShowConfirm(true);
+  };
 
-    if (confirm("Are you sure you want to delete this admin?")) {
-      try {
-        const response = await fetch(`/api/admins/${id}`, {
-          method: "DELETE",
-        });
+  const confirmDelete = async () => {
+    if (!adminToDelete) return;
 
-        if (!response.ok) {
-          throw new Error("Failed to delete admin");
-        }
+    setShowConfirm(false);
+    try {
+      const response = await fetch(`/api/admins/${adminToDelete.id}`, {
+        method: "DELETE",
+      });
 
-        toast.success("Admin deleted successfully");
-        fetchAdmins(); // Refresh the list
-      } catch (error) {
-        console.error("Error deleting admin:", error);
-        toast.error("Failed to delete admin");
+      if (!response.ok) {
+        throw new Error("Failed to delete admin");
       }
+
+      toast.success("Admin deleted successfully");
+      fetchAdmins(); // Refresh the list
+    } catch (error) {
+      console.error("Error deleting admin:", error);
+      toast.error("Failed to delete admin");
+    } finally {
+      setAdminToDelete(null);
     }
   };
 
@@ -89,13 +99,13 @@ export default function AdminsPage() {
           <h1 className="text-2xl font-bold">Admin Users</h1>
           <p className="text-gray-600 mt-1">Manage platform administrators</p>
         </div>
-        <Link
+        <LoadingLink
           href="/admins/new"
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all duration-200 hover:shadow-md"
         >
           <UserPlus className="h-4 w-4 mr-2" />
-          Add Admin
-        </Link>
+          <span>Add Admin</span>
+        </LoadingLink>
       </div>
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -181,16 +191,16 @@ export default function AdminsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
-                        <Link
+                        <LoadingLink
                           href={`/admins/${admin.id}`}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-blue-600 hover:text-blue-900 transition-colors"
                         >
                           View
-                        </Link>
+                        </LoadingLink>
                         {admin.email !== superAdminEmail ? (
                           <button
-                            onClick={() => handleDelete(admin.id, admin.email)}
-                            className="text-red-600 hover:text-red-900"
+                            onClick={() => handleDeleteClick(admin.id, admin.email)}
+                            className="text-red-600 hover:text-red-900 transition-colors"
                           >
                             Delete
                           </button>
@@ -220,6 +230,20 @@ export default function AdminsPage() {
           </div>
         )}
       </div>
+
+      {showConfirm && (
+        <ConfirmDialog
+          title="Delete Admin?"
+          message="Are you sure you want to delete this admin? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDelete}
+          onCancel={() => {
+            setShowConfirm(false);
+            setAdminToDelete(null);
+          }}
+        />
+      )}
     </div>
   );
 }

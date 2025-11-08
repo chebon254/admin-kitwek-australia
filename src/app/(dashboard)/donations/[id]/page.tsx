@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 
 interface Props {
   params: Promise<{
@@ -40,12 +40,12 @@ export default async function DonationDetailPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Donation Campaign Details</h1>
-        <Link
+        <LoadingLink
           href="/donations"
           className="text-blue-600 hover:text-blue-800"
         >
           Back to Donations
-        </Link>
+        </LoadingLink>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -11,7 +11,7 @@ import {
   Clock,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -232,12 +232,12 @@ export default async function DashboardPage() {
             ))}
           </div>
           <div className="p-4 border-t">
-            <Link
+            <LoadingLink
               href="/members"
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
             >
               View All Members →
-            </Link>
+            </LoadingLink>
           </div>
         </div>
 
@@ -259,12 +259,12 @@ export default async function DashboardPage() {
                   <span className="text-gray-500">
                     {event._count.attendees} / {event.capacity} Attendees
                   </span>
-                  <Link
+                  <LoadingLink
                     href={`/events/${event.id}`}
-                    className="text-blue-600 hover:text-blue-800"
+                    className="text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     View Details
-                  </Link>
+                  </LoadingLink>
                 </div>
                 <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
                   <div
@@ -281,12 +281,12 @@ export default async function DashboardPage() {
             ))}
           </div>
           <div className="p-4 border-t">
-            <Link
+            <LoadingLink
               href="/events"
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
             >
               View All Events →
-            </Link>
+            </LoadingLink>
           </div>
         </div>
       </div>
@@ -348,12 +348,12 @@ export default async function DashboardPage() {
           ))}
         </div>
         <div className="p-4 border-t">
-          <Link
+          <LoadingLink
             href="/donations"
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
           >
             View All Donations →
-          </Link>
+          </LoadingLink>
         </div>
       </div>
     </div>

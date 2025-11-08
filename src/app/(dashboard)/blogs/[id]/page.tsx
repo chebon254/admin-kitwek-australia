@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 
 interface Props {
   params: Promise<{
@@ -69,18 +69,18 @@ export default async function BlogDetailPage({params}: Props) {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Content Details</h1>
         <div className="flex gap-4">
-          <Link
+          <LoadingLink
             href={`/blogs/${id}/edit`}
-            className="text-blue-600 hover:text-blue-800"
+            className="text-blue-600 hover:text-blue-800 transition-colors"
           >
             Edit
-          </Link>
-          <Link
+          </LoadingLink>
+          <LoadingLink
             href="/blogs"
-            className="text-blue-600 hover:text-blue-800"
+            className="text-blue-600 hover:text-blue-800 transition-colors"
           >
             Back to List
-          </Link>
+          </LoadingLink>
         </div>
       </div>
 

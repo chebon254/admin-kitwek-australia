@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 import { ArrowLeft, Users, Calendar, Trophy, Vote, Edit, Eye, Clock, Share2, Loader2, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -144,12 +144,12 @@ export default function VotingCampaignDetailPage() {
           Please try again or go back to the campaign list.
         </p>
         <div className="mt-6">
-          <Link
+          <LoadingLink
             href="/voting"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Back to Campaigns
-          </Link>
+          </LoadingLink>
         </div>
       </div>
     );
@@ -164,9 +164,9 @@ export default function VotingCampaignDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Link href="/voting" className="text-gray-500 hover:text-gray-700">
+        <LoadingLink href="/voting" className="text-gray-500 hover:text-gray-700">
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </LoadingLink>
         <h1 className="text-2xl font-bold">Campaign Details</h1>
       </div>
 
@@ -183,13 +183,13 @@ export default function VotingCampaignDetailPage() {
               </span>
             </div>
             <div className="absolute top-4 right-4 z-10 flex gap-2">
-              <Link
+              <LoadingLink
                 href={`/voting/${campaign.id}/edit`}
                 className="bg-white text-gray-700 px-3 py-1 rounded-md hover:bg-gray-100 transition flex items-center gap-1"
               >
                 <Edit className="h-4 w-4" />
                 Edit
-              </Link>
+              </LoadingLink>
               <button
                 onClick={copyVotingLink}
                 className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition flex items-center gap-1"
@@ -208,13 +208,13 @@ export default function VotingCampaignDetailPage() {
         ) : (
           <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center relative">
             <div className="absolute top-4 right-4 flex gap-2">
-              <Link
+              <LoadingLink
                 href={`/voting/${campaign.id}/edit`}
                 className="bg-white text-gray-700 px-3 py-1 rounded-md hover:bg-gray-100 transition flex items-center gap-1"
               >
                 <Edit className="h-4 w-4" />
                 Edit
-              </Link>
+              </LoadingLink>
               <button
                 onClick={copyVotingLink}
                 className="bg-white text-blue-600 px-3 py-1 rounded-md hover:bg-gray-100 transition flex items-center gap-1"

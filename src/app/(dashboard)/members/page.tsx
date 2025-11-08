@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Mail, Users } from "lucide-react";
 import MembersList from "@/components/members/MemberList";
 import { SuccessNotification } from "@/components/SuccessNotification";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 import toast from "react-hot-toast";
 
 export default function MembersPage() {
@@ -65,21 +66,16 @@ export default function MembersPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Members Management</h1>
-        <button
+        <LoadingButton
           onClick={handleBulkEmailInactive}
-          disabled={loading}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          loading={loading}
+          loadingText="Sending..."
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-md"
         >
-          {loading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-          ) : (
-            <>
-              <Mail className="h-4 w-4" />
-              <Users className="h-4 w-4" />
-            </>
-          )}
-          {loading ? "Sending..." : "Email Inactive Users"}
-        </button>
+          <Mail className="h-4 w-4" />
+          <Users className="h-4 w-4" />
+          <span>Email Inactive Users</span>
+        </LoadingButton>
       </div>
       
       <div className="flex gap-4">

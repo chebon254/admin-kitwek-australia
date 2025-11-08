@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Upload, Save, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
@@ -231,9 +231,9 @@ export default function EditVotingCampaignPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Link href={`/voting/${campaignId}`} className="text-gray-500 hover:text-gray-700">
+        <LoadingLink href={`/voting/${campaignId}`} className="text-gray-500 hover:text-gray-700">
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </LoadingLink>
         <h1 className="text-2xl font-bold">Edit Voting Campaign</h1>
       </div>
 
@@ -549,12 +549,12 @@ export default function EditVotingCampaignPage({ params }: PageProps) {
           {/* Submit Button */}
           <div className="pt-6 border-t">
             <div className="flex gap-4">
-              <Link
+              <LoadingLink
                 href={`/voting/${campaignId}`}
                 className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-md hover:bg-gray-200 transition text-center"
               >
                 Cancel
-              </Link>
+              </LoadingLink>
               <button
                 type="submit"
                 disabled={loading || candidates.filter(c => !deletedCandidateIds.includes(c.id)).length < 2}

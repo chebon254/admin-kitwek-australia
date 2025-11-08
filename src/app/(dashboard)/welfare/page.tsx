@@ -1,13 +1,13 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import { 
-  Shield, 
-  Users, 
-  DollarSign, 
-  Clock, 
-  CheckCircle, 
+import { LoadingLink } from "@/components/ui/LoadingLink";
+import {
+  Shield,
+  Users,
+  DollarSign,
+  Clock,
+  CheckCircle,
   AlertTriangle,
   FileText
 } from "lucide-react";
@@ -93,18 +93,18 @@ export default async function WelfareDashboard() {
           <p className="text-gray-600 mt-1">Monitor and manage the welfare fund</p>
         </div>
         <div className="flex gap-2">
-          <Link
+          <LoadingLink
             href="/welfare/registrations"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-md"
           >
-            View Registrations
-          </Link>
-          <Link
+            <span>View Registrations</span>
+          </LoadingLink>
+          <LoadingLink
             href="/welfare/applications"
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 hover:shadow-md"
           >
-            View Applications
-          </Link>
+            <span>View Applications</span>
+          </LoadingLink>
         </div>
       </div>
 
@@ -225,9 +225,9 @@ export default async function WelfareDashboard() {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium text-gray-900">Recent Registrations</h3>
-              <Link href="/welfare/registrations" className="text-blue-600 hover:text-blue-800 text-sm">
+              <LoadingLink href="/welfare/registrations" className="text-blue-600 hover:text-blue-800 text-sm transition-colors">
                 View All
-              </Link>
+              </LoadingLink>
             </div>
           </div>
           <div className="p-6">
@@ -267,9 +267,9 @@ export default async function WelfareDashboard() {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium text-gray-900">Recent Applications</h3>
-              <Link href="/welfare/applications" className="text-blue-600 hover:text-blue-800 text-sm">
+              <LoadingLink href="/welfare/applications" className="text-blue-600 hover:text-blue-800 text-sm transition-colors">
                 View All
-              </Link>
+              </LoadingLink>
             </div>
           </div>
           <div className="p-6">

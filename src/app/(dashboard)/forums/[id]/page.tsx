@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 import { MessageSquare, Users } from "lucide-react";
 
 interface Props {
@@ -38,12 +38,12 @@ export default async function ForumDetailPage({ params }: Props) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Forum Details</h1>
-        <Link
+        <LoadingLink
           href="/forums"
           className="text-blue-600 hover:text-blue-800"
         >
           Back to Forums
-        </Link>
+        </LoadingLink>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

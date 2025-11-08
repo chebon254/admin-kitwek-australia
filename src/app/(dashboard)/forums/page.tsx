@@ -1,9 +1,8 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import { MessageSquare, Clock, Users, Pencil } from "lucide-react";
-import { DeleteButton } from "@/components/Delete/DeleteButton";
+import { LoadingLink } from "@/components/ui/LoadingLink";
+import { ForumsList } from "@/components/forums/ForumsList";
 
 export default async function ForumsPage() {
   const { userId } = await auth();
@@ -27,87 +26,15 @@ export default async function ForumsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Forums Management</h1>
-        <Link
+        <LoadingLink
           href="/forums/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-md inline-flex items-center gap-2"
         >
-          Create New Forum
-        </Link>
+          <span>Create New Forum</span>
+        </LoadingLink>
       </div>
 
-      {forums.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Forums Yet</h2>
-          <p className="text-gray-600 mb-4">Start by creating your first forum discussion.</p>
-          <Link
-            href="/forums/new"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800"
-          >
-            Create a Forum →
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {forums.map((forum) => {
-            const latestComment = forum.comments[0];
-            const uniqueCommenters = new Set(forum.comments.map(comment => comment.email)).size;
-
-            return (
-              <div key={forum.id} className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="p-6">
-                  <h2 className="text-xl font-semibold mb-2">{forum.title}</h2>
-                  <p className="text-gray-600 line-clamp-2 mb-4">{forum.description}</p>
-                  
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div className="text-center">
-                      <MessageSquare className="h-5 w-5 mx-auto text-blue-600 mb-1" />
-                      <div className="text-sm font-medium text-gray-600">Comments</div>
-                      <div className="text-lg font-semibold">{forum._count.comments}</div>
-                    </div>
-                    <div className="text-center">
-                      <Users className="h-5 w-5 mx-auto text-green-600 mb-1" />
-                      <div className="text-sm font-medium text-gray-600">Participants</div>
-                      <div className="text-lg font-semibold">{uniqueCommenters}</div>
-                    </div>
-                    <div className="text-center">
-                      <Clock className="h-5 w-5 mx-auto text-purple-600 mb-1" />
-                      <div className="text-sm font-medium text-gray-600">Created</div>
-                      <div className="text-sm font-semibold">
-                        {new Date(forum.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {latestComment && (
-                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600 line-clamp-2">{latestComment.content}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Latest comment by {latestComment.name} • {new Date(latestComment.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end gap-2">
-                    <Link
-                      href={`/forums/${forum.id}/edit`}
-                      className="p-2 text-blue-600 hover:text-blue-800 rounded-full hover:bg-blue-50"
-                    >
-                      <Pencil className="h-5 w-5" />
-                    </Link>
-                    <DeleteButton id={forum.id} type="forum" />
-                    <Link
-                      href={`/forums/${forum.id}`}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <ForumsList forums={forums} />
     </div>
   );
 }

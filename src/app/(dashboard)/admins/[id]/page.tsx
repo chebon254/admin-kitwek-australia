@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, User, Loader2, AlertCircle, Eye, EyeOff, Save } from 'lucide-react';
-import Link from 'next/link';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useUser } from '@clerk/nextjs';
+import { LoadingLink } from "@/components/ui/LoadingLink";
 
 interface AdminUser {
   id: string;
@@ -125,12 +125,12 @@ export default function AdminDetailPage() {
           Please try again or go back to the admin list.
         </p>
         <div className="mt-6">
-          <Link
+          <LoadingLink
             href="/admins"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Back to Admin List
-          </Link>
+          </LoadingLink>
         </div>
       </div>
     );
@@ -139,9 +139,9 @@ export default function AdminDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Link href="/admins" className="text-gray-500 hover:text-gray-700">
+        <LoadingLink href="/admins" className="text-gray-500 hover:text-gray-700">
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </LoadingLink>
         <h1 className="text-2xl font-bold">Admin Details</h1>
       </div>
 

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/LoadingLink";
 import {
   ArrowLeft,
   FileText,
@@ -108,12 +108,12 @@ export default async function WelfareApplicationDetailPage({ params }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link
+          <LoadingLink
             href="/welfare/applications"
             className="text-gray-500 hover:text-gray-700"
           >
             <ArrowLeft className="h-5 w-5" />
-          </Link>
+          </LoadingLink>
           <div>
             <h1 className="text-2xl font-bold">Application Review</h1>
             <p className="text-gray-600 mt-1">
