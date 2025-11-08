@@ -277,9 +277,14 @@ export default async function WelfareApplicationDetailPage({ params }: Props) {
 
       {/* Beneficiaries */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">
-          Beneficiaries ({application.beneficiaries.length})
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">
+            Beneficiaries ({application.beneficiaries.length})
+          </h3>
+          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+            Pre-saved Family
+          </span>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {application.beneficiaries.map((beneficiary, index) => (
             <div key={beneficiary.id} className="border rounded-lg p-4">

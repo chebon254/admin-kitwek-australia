@@ -32,6 +32,7 @@ model User {
   welfareApplications WelfareApplication[]
   welfareReimbursements WelfareReimbursement[]
   welfareRegistration WelfareRegistration? // Add this relation
+  immediateFamilies ImmediateFamily[]
 }
 
 model AdminUser {
@@ -355,4 +356,19 @@ model WelfareFund {
   waitingPeriodEnd DateTime? // 2 months after launch
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+model ImmediateFamily {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  fullName     String
+  relationship String   // Relationship to user (spouse, child, parent, sibling, etc.)
+  phone        String
+  email        String?
+  idNumber     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
 }
