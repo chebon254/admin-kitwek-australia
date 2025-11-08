@@ -47,7 +47,15 @@ export default async function WelfareApplicationDetailPage({ params }: Props) {
           membershipStatus: true,
         },
       },
-      beneficiaries: true,
+      beneficiaries: {
+        include: {
+          immediateFamily: {
+            include: {
+              documents: true,
+            },
+          },
+        },
+      },
       documents: true,
     },
   });
@@ -329,6 +337,90 @@ export default async function WelfareApplicationDetailPage({ params }: Props) {
                   </div>
                 )}
               </div>
+
+              {/* Beneficiary Proof Documents */}
+              {beneficiary.immediateFamily?.documents &&
+                beneficiary.immediateFamily.documents.length > 0 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <label className="text-sm font-medium text-gray-500 flex items-center mb-2">
+                      <FileText className="h-4 w-4 mr-1" />
+                      Proof Documents ({beneficiary.immediateFamily.documents.length})
+                    </label>
+                    <p className="text-xs text-gray-500 mb-3">
+                      ID cards, photos, and relationship verification
+                    </p>
+                    <div className="space-y-2">
+                      {beneficiary.immediateFamily.documents.map((doc) => {
+                        const isImageFile = [
+                          "jpg",
+                          "jpeg",
+                          "png",
+                          "gif",
+                          "webp",
+                        ].includes(
+                          doc.fileName.split(".").pop()?.toLowerCase() || ""
+                        );
+
+                        return (
+                          <div
+                            key={doc.id}
+                            className="bg-gray-50 rounded p-3 hover:bg-gray-100"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">
+                                  {getFileIcon(doc.fileName)}
+                                </span>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 break-words">
+                                    {doc.fileName}
+                                  </p>
+                                  <p className="text-xs text-gray-500 capitalize">
+                                    {doc.fileType.replace("_", " ")}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <a
+                                href={doc.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition"
+                              >
+                                <Download className="h-3 w-3" />
+                                Download
+                              </a>
+                              {doc.fileName.toLowerCase().includes(".pdf") && (
+                                <a
+                                  href={doc.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition"
+                                >
+                                  <FileText className="h-3 w-3" />
+                                  View
+                                </a>
+                              )}
+                            </div>
+
+                            {/* Image preview for image files */}
+                            {isImageFile && (
+                              <div className="mt-2">
+                                <DocumentImagePreview
+                                  src={doc.fileUrl}
+                                  alt={doc.fileName}
+                                  fileName={doc.fileName}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
             </div>
           ))}
         </div>

@@ -300,17 +300,20 @@ model WelfareApplication {
 }
 
 model WelfareBeneficiary {
-  id            String              @id @default(uuid())
-  applicationId String
-  application   WelfareApplication  @relation(fields: [applicationId], references: [id])
-  fullName      String
-  relationship  String              // To the deceased
-  phone         String?
-  email         String?
-  idNumber      String?
-  createdAt     DateTime            @default(now())
+  id                 String              @id @default(uuid())
+  applicationId      String
+  application        WelfareApplication  @relation(fields: [applicationId], references: [id])
+  immediateFamilyId  String?             // Reference to original family member
+  immediateFamily    ImmediateFamily?    @relation(fields: [immediateFamilyId], references: [id])
+  fullName           String
+  relationship       String              // To the deceased
+  phone              String?
+  email              String?
+  idNumber           String?
+  createdAt          DateTime            @default(now())
 
   @@index([applicationId])
+  @@index([immediateFamilyId])
 }
 
 model WelfareDocument {
@@ -359,16 +362,30 @@ model WelfareFund {
 }
 
 model ImmediateFamily {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
-  fullName     String
-  relationship String   // Relationship to user (spouse, child, parent, sibling, etc.)
-  phone        String
-  email        String?
-  idNumber     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                  String                 @id @default(uuid())
+  userId              String
+  user                User                   @relation(fields: [userId], references: [id])
+  fullName            String
+  relationship        String                 // Relationship to user (spouse, child, parent, sibling, etc.)
+  phone               String
+  email               String?
+  idNumber            String?
+  documents           FamilyDocument[]
+  welfareBeneficiaries WelfareBeneficiary[]  // Applications where this person is a beneficiary
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
 
   @@index([userId])
+}
+
+model FamilyDocument {
+  id               String          @id @default(uuid())
+  familyMemberId   String
+  familyMember     ImmediateFamily @relation(fields: [familyMemberId], references: [id], onDelete: Cascade)
+  fileName         String
+  fileUrl          String
+  fileType         String          // id_card, photo, birth_certificate, passport, other
+  uploadedAt       DateTime        @default(now())
+
+  @@index([familyMemberId])
 }
