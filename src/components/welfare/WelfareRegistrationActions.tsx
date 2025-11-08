@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Eye, UserX, UserCheck, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -25,6 +25,23 @@ export function WelfareRegistrationActions({ registration }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<'bottom' | 'top'>('bottom');
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (showMenu && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // If less than 200px space below and more space above, show menu above
+      if (spaceBelow < 200 && spaceAbove > spaceBelow) {
+        setMenuPosition('top');
+      } else {
+        setMenuPosition('bottom');
+      }
+    }
+  }, [showMenu]);
 
   const handleStatusToggle = async () => {
     const newStatus = registration.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
@@ -62,6 +79,7 @@ export function WelfareRegistrationActions({ registration }: Props) {
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         onClick={() => setShowMenu(!showMenu)}
         className="p-2 hover:bg-gray-100 rounded-full"
         disabled={loading}
@@ -76,10 +94,12 @@ export function WelfareRegistrationActions({ registration }: Props) {
       {showMenu && (
         <>
           <div
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-40"
             onClick={() => setShowMenu(false)}
           />
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 border">
+          <div className={`absolute right-0 w-48 bg-white rounded-md shadow-lg z-50 border ${
+            menuPosition === 'top' ? 'bottom-full mb-2 origin-bottom-right' : 'mt-2 origin-top-right'
+          }`}>
             <div className="py-1">
               <button
                 onClick={() => {

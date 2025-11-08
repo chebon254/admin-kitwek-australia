@@ -1,7 +1,9 @@
 'use client';
 
 import Link from "next/link";
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
+import { Loader2 } from 'lucide-react';
 import UserDropdown from "./Navbar/UserDropdown";
 
 interface DashboardNavProps {
@@ -46,17 +48,36 @@ export default function DashboardNav({ user, unreadNotifications }: DashboardNav
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [isNavigating, setIsNavigating] = useState(false);
   const isActive = pathname === href;
-  
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (pathname === href) return; // Don't navigate if already on this page
+
+    setIsNavigating(true);
+    startTransition(() => {
+      router.push(href);
+      // Navigation completes when component unmounts or after a short delay
+      setTimeout(() => setIsNavigating(false), 500);
+    });
+  };
+
   return (
     <Link
       href={href}
-      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
+      onClick={handleClick}
+      className={`inline-flex items-center gap-2 px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
         isActive
           ? 'border-blue-500 text-blue-600'
           : 'border-transparent text-gray-900 hover:border-gray-300 hover:text-gray-600'
-      }`}
+      } ${isNavigating || isPending ? 'opacity-70' : ''}`}
     >
+      {(isNavigating || isPending) && (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      )}
       {children}
     </Link>
   );
