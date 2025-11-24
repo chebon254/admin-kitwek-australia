@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Eye, UserX, UserCheck, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { UserDetailsModal } from "./UserDetailsModal";
 
 // Flexible interface that works with Prisma types
 interface Props {
@@ -25,6 +26,7 @@ export function WelfareRegistrationActions({ registration }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [menuPosition, setMenuPosition] = useState<'bottom' | 'top'>('bottom');
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -103,13 +105,10 @@ export function WelfareRegistrationActions({ registration }: Props) {
             <div className="py-1">
               <button
                 onClick={() => {
-                  // View user details - you can implement this
                   setShowMenu(false);
-                  toast("User details view not implemented yet", {
-                    icon: "ℹ️"
-                  });
+                  setShowModal(true);
                 }}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 <Eye className="h-4 w-4" />
                 View User Details
@@ -140,6 +139,13 @@ export function WelfareRegistrationActions({ registration }: Props) {
             </div>
           </div>
         </>
+      )}
+
+      {showModal && (
+        <UserDetailsModal
+          registrationId={registration.id}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   );
