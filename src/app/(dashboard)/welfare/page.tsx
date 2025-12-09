@@ -49,7 +49,7 @@ export default async function WelfareDashboard() {
   });
 
   // Calculate total fund amount
-  const totalFundAmount = activeRegistrations * 200;
+  const totalFundAmount = activeRegistrations * 100;
 
   // Get recent registrations
   const recentRegistrations = await prisma.welfareRegistration.findMany({
