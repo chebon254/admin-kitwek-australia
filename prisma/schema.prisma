@@ -33,6 +33,7 @@ model User {
   welfareReimbursements WelfareReimbursement[]
   welfareRegistration WelfareRegistration? // Add this relation
   immediateFamilies ImmediateFamily[]
+  welfareVotes  WelfareVote[]
 }
 
 model AdminUser {
@@ -261,7 +262,7 @@ model WelfareRegistration {
   id                String    @id @default(uuid())
   userId            String    @unique
   user              User      @relation(fields: [userId], references: [id]) // Add this relation
-  registrationFee   Float     @default(200.00)
+  registrationFee   Float     @default(100.00)
   paymentStatus     String    @default("PENDING") // PENDING, PAID, EXPIRED
   registrationDate  DateTime  @default(now())
   stripePaymentId   String?
@@ -388,4 +389,52 @@ model FamilyDocument {
   uploadedAt       DateTime        @default(now())
 
   @@index([familyMemberId])
+}
+
+model WelfareVotingCampaign {
+  id          String   @id @default(uuid())
+  title       String
+  description String   @db.Text
+  type        String   // DECISION, POLL
+  startDate   DateTime
+  endDate     DateTime
+  status      String   @default("UPCOMING") // UPCOMING, ACTIVE, COMPLETED, CANCELLED
+  createdBy   String   // Admin ID who created it
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  candidates WelfareVotingCandidate[]
+  votes      WelfareVote[]
+
+  @@index([status])
+  @@index([createdBy])
+}
+
+model WelfareVotingCandidate {
+  id          String   @id @default(uuid())
+  campaignId  String
+  name        String
+  description String?  @db.Text
+  imageUrl    String?
+
+  campaign WelfareVotingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  votes    WelfareVote[]
+
+  @@index([campaignId])
+}
+
+model WelfareVote {
+  id          String   @id @default(uuid())
+  userId      String
+  campaignId  String
+  candidateId String
+  createdAt   DateTime @default(now())
+
+  user      User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaign  WelfareVotingCampaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  candidate WelfareVotingCandidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, campaignId])
+  @@index([campaignId])
+  @@index([userId])
 }

@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Eye, UserX, UserCheck, Loader2 } from "lucide-react";
+import { MoreHorizontal, Eye, UserX, UserCheck, Loader2, Users } from "lucide-react";
 import toast from "react-hot-toast";
+import Link from "next/link";
 import { UserDetailsModal } from "./UserDetailsModal";
 
 // Flexible interface that works with Prisma types
@@ -113,7 +114,16 @@ export function WelfareRegistrationActions({ registration }: Props) {
                 <Eye className="h-4 w-4" />
                 View User Details
               </button>
-              
+
+              <Link
+                href={`/welfare/registrations/${registration.id}/beneficiaries`}
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                onClick={() => setShowMenu(false)}
+              >
+                <Users className="h-4 w-4" />
+                Manage Beneficiaries
+              </Link>
+
               {registration.paymentStatus === 'PAID' && (
                 <button
                   onClick={handleStatusToggle}

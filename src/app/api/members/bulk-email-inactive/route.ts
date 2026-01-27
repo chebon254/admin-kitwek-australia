@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import nodemailer from 'nodemailer';
+import path from 'path';
 import { prisma } from "@/lib/prisma";
 
 const transporter = nodemailer.createTransport({
@@ -13,7 +14,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const { userId } = await auth();
 
@@ -21,7 +22,11 @@ export async function POST() {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Get all inactive users
+    // Get limit from query params (default 100 to avoid timeout)
+    const { searchParams } = new URL(request.url);
+    const maxEmails = parseInt(searchParams.get('limit') || '100');
+
+    // Get all inactive users (limited to avoid timeout)
     const inactiveUsers = await prisma.user.findMany({
       where: {
         membershipStatus: "INACTIVE",
@@ -33,12 +38,13 @@ export async function POST() {
         firstName: true,
         lastName: true,
       },
+      take: maxEmails, // Limit to prevent timeout
     });
 
     if (inactiveUsers.length === 0) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: "No inactive users found",
-        emailsSent: 0 
+        emailsSent: 0
       });
     }
 
@@ -47,7 +53,7 @@ export async function POST() {
     const failedEmails: string[] = [];
 
     // Send emails in batches to avoid overwhelming the SMTP server
-    const batchSize = 10;
+    const batchSize = 5; // Reduced from 10 to process faster
     for (let i = 0; i < inactiveUsers.length; i += batchSize) {
       const batch = inactiveUsers.slice(i, i + batchSize);
       
@@ -57,6 +63,15 @@ export async function POST() {
             from: `"Kitwek Victoria Admin" <${process.env.SMTP_USER}>`,
             to: user.email,
             subject: 'Complete Your Kitwek Victoria Membership Activation',
+            attachments: [
+              {
+                filename: "Kitwek Victoria - Strengthening the Kalenjin Community.pdf",
+                path: path.join(
+                  process.cwd(),
+                  "public/files/Kitwek Victoria - Strengthening the Kalenjin Community.pdf"
+                ),
+              },
+            ],
             html: `
               <!DOCTYPE html>
               <html>
@@ -134,7 +149,12 @@ export async function POST() {
                         <li>Member directory access</li>
                         <li>Community forums participation</li>
                       </ul>
-                      
+
+                      <div style="background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                        <p style="margin: 0;"><strong>📄 Constitution Document Attached</strong></p>
+                        <p style="margin: 5px 0 0 0; font-size: 14px;">We've attached our organization's constitution document for your review. It outlines our principles, guidelines, and community values.</p>
+                      </div>
+
                       <p>If you have any questions or need assistance, please don't hesitate to contact us.</p>
                       
                       <p>Best regards,<br>The Kitwek Victoria Team</p>
@@ -156,26 +176,38 @@ export async function POST() {
       });
 
       await Promise.allSettled(emailPromises);
-      
+
       // Add a small delay between batches to be respectful to the SMTP server
       if (i + batchSize < inactiveUsers.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500)); // Reduced from 1000ms
       }
     }
+
+    // Get total count of inactive users for reporting
+    const totalInactiveCount = await prisma.user.count({
+      where: {
+        membershipStatus: "INACTIVE",
+        revokeStatus: false,
+      },
+    });
 
     // Log the bulk email activity
     await prisma.adminLog.create({
       data: {
         adminId: userId,
         action: "BULK_EMAIL_INACTIVE_USERS",
-        details: `Sent activation emails to ${emailsSent} inactive users. ${failedEmails.length} emails failed.`,
+        details: `Sent activation emails with constitution PDF to ${emailsSent}/${inactiveUsers.length} inactive users. ${failedEmails.length} emails failed. Total inactive users: ${totalInactiveCount}`,
       },
     });
 
-    return NextResponse.json({ 
-      message: `Successfully sent ${emailsSent} activation emails`,
+    const hasMore = totalInactiveCount > inactiveUsers.length;
+
+    return NextResponse.json({
+      message: `Successfully sent ${emailsSent} activation emails${hasMore ? ` (${totalInactiveCount - inactiveUsers.length} more users remaining)` : ''}`,
       emailsSent,
-      totalInactive: inactiveUsers.length,
+      totalProcessed: inactiveUsers.length,
+      totalInactive: totalInactiveCount,
+      hasMore,
       failedEmails: failedEmails.length > 0 ? failedEmails : undefined
     });
 

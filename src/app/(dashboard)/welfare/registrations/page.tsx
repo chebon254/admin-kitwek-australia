@@ -2,10 +2,11 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowLeft, Search, Filter, Users, DollarSign, CheckCircle, Clock } from "lucide-react";
+import { ArrowLeft, Search, Filter, Users, DollarSign, CheckCircle, Clock, FileSpreadsheet, FileText } from "lucide-react";
 import { WelfareRegistrationActions } from '@/components/welfare/WelfareRegistrationActions';
 import type { WelfareRegistrationWithUser } from '@/types/welfare';
 import { Prisma } from '@prisma/client';
+import { ExportButtons } from '@/components/welfare/ExportButtons';
 
 // Define the props with promises as required by Next.js 14
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
@@ -173,6 +174,7 @@ export default async function WelfareRegistrationsPage(props: {
       {/* Filters and Search */}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-700 md:hidden">Filters & Export</h3>
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -189,9 +191,10 @@ export default async function WelfareRegistrationsPage(props: {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="h-5 w-5 text-gray-400" />
-            <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-gray-400" />
+              <div className="flex gap-2">
               <Link
                 href="/welfare/registrations"
                 className={`px-3 py-1 rounded-md text-sm ${
@@ -225,14 +228,18 @@ export default async function WelfareRegistrationsPage(props: {
               <Link
                 href="/welfare/registrations?status=inactive"
                 className={`px-3 py-1 rounded-md text-sm ${
-                  status === 'inactive' 
-                    ? 'bg-blue-600 text-white' 
+                  status === 'inactive'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 Inactive
               </Link>
             </div>
+            </div>
+
+            {/* Export Buttons */}
+            <ExportButtons status={status} />
           </div>
         </div>
       </div>
