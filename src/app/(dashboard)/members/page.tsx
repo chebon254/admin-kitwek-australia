@@ -25,6 +25,7 @@ export default function MembersPage() {
 
   // Bulk email progress states
   const [showProgressModal, setShowProgressModal] = useState(false);
+  const [isSendingEmails, setIsSendingEmails] = useState(false);
   const [emailProgress, setEmailProgress] = useState({
     total: 0,
     processed: 0,
@@ -56,6 +57,12 @@ export default function MembersPage() {
   };
 
   const handleBulkEmailInactive = async () => {
+    // If already sending emails, just reopen the modal
+    if (isSendingEmails) {
+      setShowProgressModal(true);
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -84,6 +91,7 @@ export default function MembersPage() {
         isComplete: false,
         failedEmails: [],
       });
+      setIsSendingEmails(true);
       setShowProgressModal(true);
       setLoading(false);
 
@@ -153,6 +161,7 @@ export default function MembersPage() {
         isComplete: true,
         currentEmail: "",
       }));
+      setIsSendingEmails(false);
 
       // Show toast notification
       if (failed === 0) {
@@ -165,7 +174,24 @@ export default function MembersPage() {
       console.error("Error sending bulk emails:", error);
       toast.error("Failed to send bulk emails");
       setLoading(false);
+      setIsSendingEmails(false);
       setShowProgressModal(false);
+    }
+  };
+
+  const handleCloseProgressModal = () => {
+    setShowProgressModal(false);
+    // If complete, reset the state
+    if (emailProgress.isComplete) {
+      setEmailProgress({
+        total: 0,
+        processed: 0,
+        successful: 0,
+        failed: 0,
+        currentEmail: "",
+        isComplete: false,
+        failedEmails: [],
+      });
     }
   };
 
@@ -341,7 +367,7 @@ export default function MembersPage() {
 
       <BulkEmailProgressModal
         isOpen={showProgressModal}
-        onClose={() => setShowProgressModal(false)}
+        onClose={handleCloseProgressModal}
         total={emailProgress.total}
         processed={emailProgress.processed}
         successful={emailProgress.successful}

@@ -18,14 +18,20 @@ export async function POST(request: Request) {
     const { userId } = await auth();
 
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
     const { email, firstName, lastName, userId: targetUserId } = body;
 
     if (!email || !targetUserId) {
-      return new NextResponse("Email and userId required", { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Email and userId required" },
+        { status: 400 }
+      );
     }
 
     const activationLink = `https://kitwekvictoria.org/dashboard/membership`;

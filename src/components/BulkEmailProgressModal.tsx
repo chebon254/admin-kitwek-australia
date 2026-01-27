@@ -37,13 +37,15 @@ export function BulkEmailProgressModal({
           <h2 className="text-xl font-semibold text-gray-900">
             {isComplete ? 'Bulk Email Complete' : 'Sending Activation Emails'}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            disabled={!isComplete}
-          >
-            <X className="h-6 w-6" />
-          </button>
+          {isComplete && (
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              title="Close"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          )}
         </div>
 
         {/* Body */}

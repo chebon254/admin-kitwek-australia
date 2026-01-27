@@ -7,7 +7,10 @@ export async function GET() {
     const { userId } = await auth();
 
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     // Get all inactive users who haven't been revoked
@@ -34,6 +37,9 @@ export async function GET() {
 
   } catch (error) {
     console.error("[GET_INACTIVE_USERS]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Error" },
+      { status: 500 }
+    );
   }
 }
