@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowLeft, Search, Filter, Users, DollarSign, CheckCircle, Clock, FileSpreadsheet, FileText } from "lucide-react";
+import { ArrowLeft, Search, Filter, Users, DollarSign, CheckCircle, Clock } from "lucide-react";
 import { WelfareRegistrationActions } from '@/components/welfare/WelfareRegistrationActions';
 import type { WelfareRegistrationWithUser } from '@/types/welfare';
 import { Prisma } from '@prisma/client';

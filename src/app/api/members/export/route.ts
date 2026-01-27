@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import * as XLSX from 'xlsx';
 
 export async function GET(request: Request) {
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
     const dateTo = searchParams.get('dateTo');
 
     // Build where clause
-    const whereClause: any = {};
+    const whereClause: Prisma.UserWhereInput = {};
 
     if (status !== 'all') {
       whereClause.membershipStatus = status.toUpperCase();

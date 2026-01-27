@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Mail, Users, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { Mail, FileSpreadsheet, FileText } from "lucide-react";
 import MembersList from "@/components/members/MemberList";
 import { SuccessNotification } from "@/components/SuccessNotification";
 import { LoadingButton } from "@/components/ui/LoadingButton";

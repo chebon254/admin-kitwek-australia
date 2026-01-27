@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, User, Edit2, Save, X, Loader2, Trash2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -26,7 +26,6 @@ interface UserInfo {
 }
 
 export default function BeneficiariesManagementPage() {
-  const router = useRouter();
   const params = useParams();
   const registrationId = params.id as string;
 
@@ -40,6 +39,7 @@ export default function BeneficiariesManagementPage() {
 
   useEffect(() => {
     fetchBeneficiaries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registrationId]);
 
   const fetchBeneficiaries = async () => {
