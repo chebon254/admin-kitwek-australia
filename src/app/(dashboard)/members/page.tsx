@@ -4,8 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Mail, FileSpreadsheet, FileText } from "lucide-react";
 import MembersList from "@/components/members/MemberList";
-import { SuccessNotification } from "@/components/SuccessNotification";
 import { LoadingButton } from "@/components/ui/LoadingButton";
+import { BulkEmailProgressModal } from "@/components/BulkEmailProgressModal";
 import toast from "react-hot-toast";
 
 export default function MembersPage() {
@@ -15,8 +15,6 @@ export default function MembersPage() {
   const status = searchParams.get("status") || "";
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
   // Additional filter states
@@ -24,6 +22,18 @@ export default function MembersPage() {
   const [revokeStatus, setRevokeStatus] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  // Bulk email progress states
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [emailProgress, setEmailProgress] = useState({
+    total: 0,
+    processed: 0,
+    successful: 0,
+    failed: 0,
+    currentEmail: "",
+    isComplete: false,
+    failedEmails: [] as Array<{ email: string; error: string }>,
+  });
 
   const updateSearch = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -48,25 +58,114 @@ export default function MembersPage() {
   const handleBulkEmailInactive = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/members/bulk-email-inactive", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
 
-      if (!response.ok) {
-        throw new Error("Failed to send bulk emails");
+      // First, get the list of inactive users
+      const listResponse = await fetch("/api/members/inactive-list");
+
+      if (!listResponse.ok) {
+        throw new Error("Failed to fetch inactive users");
       }
 
-      const result = await response.json();
+      const { users, total } = await listResponse.json();
 
-      setNotificationMessage(`Successfully sent ${result.emailsSent} activation emails to inactive users`);
-      setShowNotification(true);
-      toast.success(`Sent ${result.emailsSent} activation emails successfully`);
+      if (total === 0) {
+        toast("No inactive users found");
+        setLoading(false);
+        return;
+      }
+
+      // Initialize progress modal
+      setEmailProgress({
+        total,
+        processed: 0,
+        successful: 0,
+        failed: 0,
+        currentEmail: "",
+        isComplete: false,
+        failedEmails: [],
+      });
+      setShowProgressModal(true);
+      setLoading(false);
+
+      // Send emails one by one
+      let successful = 0;
+      let failed = 0;
+      const failedEmails: Array<{ email: string; error: string }> = [];
+
+      for (let i = 0; i < users.length; i++) {
+        const user = users[i];
+
+        // Update current email being processed
+        setEmailProgress(prev => ({
+          ...prev,
+          currentEmail: user.email,
+        }));
+
+        try {
+          const emailResponse = await fetch("/api/members/send-activation-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              userId: user.id,
+            }),
+          });
+
+          const result = await emailResponse.json();
+
+          if (result.success) {
+            successful++;
+          } else {
+            failed++;
+            failedEmails.push({
+              email: user.email,
+              error: result.error || "Unknown error",
+            });
+          }
+        } catch (error) {
+          failed++;
+          failedEmails.push({
+            email: user.email,
+            error: error instanceof Error ? error.message : "Network error",
+          });
+        }
+
+        // Update progress
+        setEmailProgress(prev => ({
+          ...prev,
+          processed: i + 1,
+          successful,
+          failed,
+          failedEmails,
+        }));
+
+        // Small delay between emails to avoid overwhelming the server
+        if (i < users.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
+      // Mark as complete
+      setEmailProgress(prev => ({
+        ...prev,
+        isComplete: true,
+        currentEmail: "",
+      }));
+
+      // Show toast notification
+      if (failed === 0) {
+        toast.success(`All ${successful} emails sent successfully!`);
+      } else {
+        toast.error(`${successful} emails sent, ${failed} failed`);
+      }
+
     } catch (error) {
       console.error("Error sending bulk emails:", error);
       toast.error("Failed to send bulk emails");
-    } finally {
       setLoading(false);
+      setShowProgressModal(false);
     }
   };
 
@@ -240,12 +339,17 @@ export default function MembersPage() {
       
       <MembersList />
 
-      {showNotification && (
-        <SuccessNotification
-          message={notificationMessage}
-          onClose={() => setShowNotification(false)}
-        />
-      )}
+      <BulkEmailProgressModal
+        isOpen={showProgressModal}
+        onClose={() => setShowProgressModal(false)}
+        total={emailProgress.total}
+        processed={emailProgress.processed}
+        successful={emailProgress.successful}
+        failed={emailProgress.failed}
+        currentEmail={emailProgress.currentEmail}
+        isComplete={emailProgress.isComplete}
+        failedEmails={emailProgress.failedEmails}
+      />
     </div>
   );
 }
