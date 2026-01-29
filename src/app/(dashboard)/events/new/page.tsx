@@ -18,6 +18,7 @@ export default function NewEventPage() {
   const [capacity, setCapacity] = useState("");
   const [isPaid, setIsPaid] = useState(false);
   const [price, setPrice] = useState("");
+  const [visibility, setVisibility] = useState("PUBLIC");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -69,6 +70,7 @@ export default function NewEventPage() {
           capacity: parseInt(capacity),
           isPaid,
           price: isPaid ? parseFloat(price) : null,
+          visibility,
         }),
       });
 
@@ -164,38 +166,56 @@ export default function NewEventPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Capacity
-            </label>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Capacity
+          </label>
+          <input
+            type="number"
+            value={capacity}
+            onChange={(e) => setCapacity(e.target.value)}
+            className="w-full p-2 border rounded-md"
+            min="1"
+            required
+            disabled={loading}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Event Visibility
+          </label>
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+            className="w-full p-2 border rounded-md bg-white"
+            disabled={loading}
+          >
+            <option value="PUBLIC">Public (Anyone can view and purchase)</option>
+            <option value="MEMBERS_ONLY">Members Only (Login required)</option>
+          </select>
+          <p className="text-sm text-gray-500 mt-1">
+            {visibility === "PUBLIC"
+              ? "Anyone can view and purchase tickets for this event"
+              : "Only logged-in members can view and purchase tickets for this event"}
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Is this a paid event?
+          </label>
+          <div className="flex items-center mt-2">
             <input
-              type="number"
-              value={capacity}
-              onChange={(e) => setCapacity(e.target.value)}
-              className="w-full p-2 border rounded-md"
-              min="1"
-              required
+              type="checkbox"
+              checked={isPaid}
+              onChange={(e) => setIsPaid(e.target.checked)}
+              className="h-4 w-4 text-blue-600 rounded border-gray-300"
               disabled={loading}
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Is this a paid event?
-            </label>
-            <div className="flex items-center mt-2">
-              <input
-                type="checkbox"
-                checked={isPaid}
-                onChange={(e) => setIsPaid(e.target.checked)}
-                className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                disabled={loading}
-              />
-              <span className="ml-2 text-gray-700">
-                Yes, this is a paid event
-              </span>
-            </div>
+            <span className="ml-2 text-gray-700">
+              Yes, this is a paid event
+            </span>
           </div>
         </div>
 

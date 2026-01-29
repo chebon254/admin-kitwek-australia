@@ -62,7 +62,7 @@ export async function PATCH(
       );
     }
 
-    const { title, description, thumbnail, date, location, capacity, isPaid, price, status } = await request.json();
+    const { title, description, thumbnail, date, location, capacity, isPaid, price, status, visibility } = await request.json();
 
     const updatedEvent = await prisma.event.update({
       where: { id: (await params).id },
@@ -76,6 +76,7 @@ export async function PATCH(
         isPaid,
         price,
         status,
+        visibility: visibility || "PUBLIC",
       },
     });
 

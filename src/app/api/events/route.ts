@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { title, description, thumbnail, date, location, capacity, isPaid, price } = await req.json();
+    const { title, description, thumbnail, date, location, capacity, isPaid, price, visibility } = await req.json();
 
     const event = await prisma.event.create({
       data: {
@@ -23,6 +23,7 @@ export async function POST(req: Request) {
         remainingSlots: capacity, // Initialize remainingSlots with capacity
         isPaid,
         price,
+        visibility: visibility || "PUBLIC",
         status: "UPCOMING",
         adminId: userId,
       },

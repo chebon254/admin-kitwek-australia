@@ -26,6 +26,7 @@ export default function EditEventPage({ params }: PageProps) {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [status, setStatus] = useState("UPCOMING");
+  const [visibility, setVisibility] = useState("PUBLIC");
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function EditEventPage({ params }: PageProps) {
         setIsPaid(event.isPaid);
         setPrice(event.price?.toString() || "");
         setStatus(event.status);
+        setVisibility(event.visibility || "PUBLIC");
         setThumbnailPreview(event.thumbnail);
 
         const eventDate = new Date(event.date);
@@ -102,6 +104,7 @@ export default function EditEventPage({ params }: PageProps) {
           isPaid,
           price: isPaid ? parseFloat(price) : null,
           status,
+          visibility,
         }),
       });
 
@@ -197,38 +200,56 @@ export default function EditEventPage({ params }: PageProps) {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Capacity
-            </label>
-            <input
-              type="number"
-              value={capacity}
-              onChange={(e) => setCapacity(e.target.value)}
-              className="w-full p-2 border rounded-md"
-              min="1"
-              required
-              disabled={loading}
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Capacity
+          </label>
+          <input
+            type="number"
+            value={capacity}
+            onChange={(e) => setCapacity(e.target.value)}
+            className="w-full p-2 border rounded-md"
+            min="1"
+            required
+            disabled={loading}
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="w-full p-2 border rounded-md"
-              disabled={loading}
-            >
-              <option value="UPCOMING">Upcoming</option>
-              <option value="ONGOING">Ongoing</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Status
+          </label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="w-full p-2 border rounded-md bg-white"
+            disabled={loading}
+          >
+            <option value="UPCOMING">Upcoming</option>
+            <option value="ONGOING">Ongoing</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Event Visibility
+          </label>
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+            className="w-full p-2 border rounded-md bg-white"
+            disabled={loading}
+          >
+            <option value="PUBLIC">Public (Anyone can view and purchase)</option>
+            <option value="MEMBERS_ONLY">Members Only (Login required)</option>
+          </select>
+          <p className="text-sm text-gray-500 mt-1">
+            {visibility === "PUBLIC"
+              ? "Anyone can view and purchase tickets for this event"
+              : "Only logged-in members can view and purchase tickets for this event"}
+          </p>
         </div>
 
         <div>

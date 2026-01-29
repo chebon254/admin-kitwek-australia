@@ -104,6 +104,7 @@ model Event {
   isPaid        Boolean   @default(false)
   price         Float?
   status        String    @default("UPCOMING") // UPCOMING, ONGOING, COMPLETED, CANCELLED
+  visibility    String    @default("PUBLIC") // PUBLIC, MEMBERS_ONLY
   cancelReason  String?   @db.Text
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
