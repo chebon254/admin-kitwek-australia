@@ -7,7 +7,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface DeleteButtonProps {
   id: string;
-  type: 'blog' | 'event' | 'donation' | 'forum' | 'voting-campaign';
+  type: 'blog' | 'event' | 'donation' | 'forum' | 'voting-campaign' | 'welfare-voting-campaign';
   onDelete?: () => void;
 }
 
@@ -19,6 +19,8 @@ export function DeleteButton({ id, type, onDelete }: DeleteButtonProps) {
     switch (type) {
       case 'voting-campaign':
         return `/api/voting/campaigns/${id}`;
+      case 'welfare-voting-campaign':
+        return `/api/welfare-voting/campaigns/${id}`;
       default:
         return `/api/${type}s/${id}`;
     }
@@ -28,6 +30,8 @@ export function DeleteButton({ id, type, onDelete }: DeleteButtonProps) {
     switch (type) {
       case 'voting-campaign':
         return 'voting campaign';
+      case 'welfare-voting-campaign':
+        return 'welfare voting campaign';
       case 'blog':
         return 'blog post';
       default:

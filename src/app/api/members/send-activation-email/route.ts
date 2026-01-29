@@ -36,19 +36,21 @@ export async function POST(request: Request) {
 
     const activationLink = `https://kitwekvictoria.org/dashboard/membership`;
 
-    await transporter.sendMail({
-      from: `"Kitwek Victoria Admin" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: 'Complete Your Kitwek Victoria Membership Activation',
-      attachments: [
-        {
-          filename: "Kitwek Victoria - Strengthening the Kalenjin Community.pdf",
-          path: path.join(
-            process.cwd(),
-            "public/files/Kitwek Victoria - Strengthening the Kalenjin Community.pdf"
-          ),
-        },
-      ],
+    // Wrap email sending in try-catch to ensure we always return JSON
+    try {
+      await transporter.sendMail({
+        from: `"Kitwek Victoria Admin" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: 'Complete Your Kitwek Victoria Membership Activation',
+        attachments: [
+          {
+            filename: "Kitwek Victoria - Strengthening the Kalenjin Community.pdf",
+            path: path.join(
+              process.cwd(),
+              "public/files/Kitwek Victoria - Strengthening the Kalenjin Community.pdf"
+            ),
+          },
+        ],
       html: `
         <!DOCTYPE html>
         <html>
@@ -144,7 +146,17 @@ export async function POST(request: Request) {
           </body>
         </html>
       `,
-    });
+      });
+    } catch (emailError) {
+      console.error("[EMAIL_SEND_ERROR]", emailError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: emailError instanceof Error ? emailError.message : "Failed to send email - SMTP error"
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
