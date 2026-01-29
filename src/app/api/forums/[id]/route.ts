@@ -10,7 +10,10 @@ export async function GET(
     const { userId } = await auth();
 
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const forum = await prisma.forum.findUnique({
@@ -18,13 +21,19 @@ export async function GET(
     });
 
     if (!forum || forum.adminId !== userId) {
-      return new NextResponse("Not found", { status: 404 });
+      return NextResponse.json(
+        { error: "Not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(forum);
   } catch (error) {
     console.error("[FORUM_GET]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -36,7 +45,10 @@ export async function PATCH(
     const { userId } = await auth();
 
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const forum = await prisma.forum.findUnique({
@@ -44,7 +56,10 @@ export async function PATCH(
     });
 
     if (!forum || forum.adminId !== userId) {
-      return new NextResponse("Not found", { status: 404 });
+      return NextResponse.json(
+        { error: "Not found" },
+        { status: 404 }
+      );
     }
 
     const { title, description } = await request.json();
@@ -60,7 +75,10 @@ export async function PATCH(
     return NextResponse.json(updatedForum);
   } catch (error) {
     console.error("[FORUM_PATCH]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -72,24 +90,53 @@ export async function DELETE(
     const { userId } = await auth();
 
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
+    const forumId = (await params).id;
+
     const forum = await prisma.forum.findUnique({
-      where: { id: (await params).id },
+      where: { id: forumId },
     });
 
     if (!forum || forum.adminId !== userId) {
-      return new NextResponse("Not found", { status: 404 });
+      return NextResponse.json(
+        { error: "Not found" },
+        { status: 404 }
+      );
     }
 
-    await prisma.forum.delete({
-      where: { id: (await params).id },
+    // Delete forum comments first, then forum
+    await prisma.$transaction(async (tx) => {
+      // Delete all comments for this forum
+      await tx.forumComment.deleteMany({
+        where: { forumId: forumId },
+      });
+
+      // Delete the forum
+      await tx.forum.delete({
+        where: { id: forumId },
+      });
     });
 
-    return new NextResponse(null, { status: 204 });
+    // Log the action
+    await prisma.adminLog.create({
+      data: {
+        adminId: userId,
+        action: "DELETE_FORUM",
+        details: `Deleted forum: ${forum.title}`,
+      },
+    });
+
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("[FORUM_DELETE]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to delete forum" },
+      { status: 500 }
+    );
   }
 }

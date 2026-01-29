@@ -10,7 +10,10 @@ export async function GET(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
     
     const campaign = await prisma.votingCampaign.findUnique({
@@ -59,13 +62,19 @@ export async function GET(
     });
     
     if (!campaign || campaign.adminId !== userId) {
-      return new NextResponse("Not found", { status: 404 });
+      return NextResponse.json(
+        { error: "Not found" },
+        { status: 404 }
+      );
     }
-    
+
     return NextResponse.json(campaign);
   } catch (error) {
     console.error("[VOTING_CAMPAIGN_GET]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -76,39 +85,54 @@ export async function PATCH(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
-    
+
     const campaign = await prisma.votingCampaign.findUnique({
       where: { id: (await params).id },
     });
-    
+
     if (!campaign || campaign.adminId !== userId) {
-      return new NextResponse("Not found", { status: 404 });
+      return NextResponse.json(
+        { error: "Not found" },
+        { status: 404 }
+      );
     }
-    
-    const { 
-      title, 
-      description, 
-      type, 
-      status, 
-      startDate, 
-      endDate, 
-      thumbnail, 
-      candidates, 
-      deletedCandidateIds 
+
+    const {
+      title,
+      description,
+      type,
+      status,
+      startDate,
+      endDate,
+      thumbnail,
+      candidates,
+      deletedCandidateIds
     } = await request.json();
 
     if (!title || !description || !type || !startDate || !endDate) {
-      return new NextResponse("Missing required fields", { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
     if (!candidates || candidates.length < 2) {
-      return new NextResponse("At least 2 candidates are required", { status: 400 });
+      return NextResponse.json(
+        { error: "At least 2 candidates are required" },
+        { status: 400 }
+      );
     }
 
     if (new Date(startDate) >= new Date(endDate)) {
-      return new NextResponse("End date must be after start date", { status: 400 });
+      return NextResponse.json(
+        { error: "End date must be after start date" },
+        { status: 400 }
+      );
     }
 
     // Use transaction to handle all updates atomically
@@ -181,7 +205,10 @@ export async function PATCH(
     return NextResponse.json(updatedCampaign);
   } catch (error) {
     console.error("[VOTING_CAMPAIGN_PATCH]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Internal Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -192,34 +219,58 @@ export async function DELETE(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
-    
+
+    const campaignId = (await params).id;
+
     const campaign = await prisma.votingCampaign.findUnique({
-      where: { id: (await params).id },
+      where: { id: campaignId },
     });
-    
+
     if (!campaign || campaign.adminId !== userId) {
-      return new NextResponse("Not found", { status: 404 });
+      return NextResponse.json(
+        { error: "Not found" },
+        { status: 404 }
+      );
     }
-    
-    // Delete campaign (cascade will handle candidates and votes)
-    await prisma.votingCampaign.delete({
-      where: { id: (await params).id },
+
+    // Delete campaign and related data in transaction
+    await prisma.$transaction(async (tx) => {
+      // Delete all votes for this campaign
+      await tx.vote.deleteMany({
+        where: { campaignId: campaignId },
+      });
+
+      // Delete all candidates for this campaign
+      await tx.votingCandidate.deleteMany({
+        where: { campaignId: campaignId },
+      });
+
+      // Delete the campaign
+      await tx.votingCampaign.delete({
+        where: { id: campaignId },
+      });
     });
 
     // Log the action
     await prisma.adminLog.create({
       data: {
         adminId: userId,
-        action: "DELETE",
+        action: "DELETE_VOTING_CAMPAIGN",
         details: `Deleted voting campaign: ${campaign.title}`,
       },
     });
-    
-    return new NextResponse(null, { status: 204 });
+
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("[VOTING_CAMPAIGN_DELETE]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to delete voting campaign" },
+      { status: 500 }
+    );
   }
 }
