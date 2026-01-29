@@ -2,9 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, User, Edit2, Save, X, Loader2, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, User, Edit2, Save, X, Loader2, Trash2, AlertCircle, FileText, Upload, Download, Eye } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+
+interface FamilyDocument {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: string;
+}
 
 interface Beneficiary {
   id: string;
@@ -15,6 +23,7 @@ interface Beneficiary {
   idNumber: string | null;
   createdAt: string;
   updatedAt: string;
+  documents: FamilyDocument[];
 }
 
 interface UserInfo {
@@ -36,6 +45,8 @@ export default function BeneficiariesManagementPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Beneficiary>>({});
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [deleteDocConfirm, setDeleteDocConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBeneficiaries();
@@ -127,6 +138,66 @@ export default function BeneficiariesManagementPage() {
       console.error("Error deleting beneficiary:", error);
       toast.error("Failed to delete beneficiary");
     }
+  };
+
+  const handleDocumentUpload = async (beneficiaryId: string, file: File, fileType: string) => {
+    setUploadingDoc(beneficiaryId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("fileType", fileType);
+
+      const response = await fetch(`/api/welfare/beneficiaries/${beneficiaryId}/documents`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Document uploaded successfully");
+        fetchBeneficiaries(); // Refresh data
+      } else {
+        toast.error(data.error || "Failed to upload document");
+      }
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      toast.error("Failed to upload document");
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
+
+  const deleteDocument = async (documentId: string) => {
+    try {
+      const response = await fetch(`/api/welfare/documents/${documentId}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Document deleted successfully");
+        setDeleteDocConfirm(null);
+        fetchBeneficiaries(); // Refresh data
+      } else {
+        toast.error(data.error || "Failed to delete document");
+      }
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      toast.error("Failed to delete document");
+    }
+  };
+
+  const getFileTypeLabel = (fileType: string) => {
+    const labels: Record<string, string> = {
+      id_card: "ID Card",
+      photo: "Photo",
+      birth_certificate: "Birth Certificate",
+      passport: "Passport",
+      other: "Other Document",
+    };
+    return labels[fileType] || fileType;
   };
 
   if (loading) {
@@ -344,6 +415,119 @@ export default function BeneficiariesManagementPage() {
                   </div>
                 </div>
 
+                {/* Documents Section */}
+                <div className="mt-6 border-t pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-gray-900 flex items-center">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Proof Documents ({beneficiary.documents?.length || 0})
+                    </h4>
+                    <label
+                      htmlFor={`upload-${beneficiary.id}`}
+                      className={`inline-flex items-center px-3 py-1.5 text-xs border border-indigo-600 rounded-md text-indigo-600 bg-white hover:bg-indigo-50 cursor-pointer transition-colors ${
+                        uploadingDoc === beneficiary.id ? "opacity-50 pointer-events-none" : ""
+                      }`}
+                    >
+                      {uploadingDoc === beneficiary.id ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-3 w-3 mr-1" />
+                          Upload Document
+                        </>
+                      )}
+                      <input
+                        id={`upload-${beneficiary.id}`}
+                        type="file"
+                        accept="image/*,.pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const fileType = prompt(
+                              "Select document type:\n" +
+                              "1 - ID Card\n" +
+                              "2 - Photo\n" +
+                              "3 - Birth Certificate\n" +
+                              "4 - Passport\n" +
+                              "5 - Other",
+                              "1"
+                            );
+                            const typeMap: Record<string, string> = {
+                              "1": "id_card",
+                              "2": "photo",
+                              "3": "birth_certificate",
+                              "4": "passport",
+                              "5": "other",
+                            };
+                            const selectedType = typeMap[fileType || "5"] || "other";
+                            handleDocumentUpload(beneficiary.id, file, selectedType);
+                            e.target.value = "";
+                          }
+                        }}
+                        disabled={uploadingDoc === beneficiary.id}
+                      />
+                    </label>
+                  </div>
+
+                  {beneficiary.documents && beneficiary.documents.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {beneficiary.documents.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                        >
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {doc.fileName}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {getFileTypeLabel(doc.fileType)} • {new Date(doc.uploadedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <a
+                              href={doc.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                              title="View document"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </a>
+                            <a
+                              href={doc.fileUrl}
+                              download
+                              className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                              title="Download document"
+                            >
+                              <Download className="h-4 w-4" />
+                            </a>
+                            <button
+                              onClick={() => setDeleteDocConfirm(doc.id)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                              title="Delete document"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                      <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">No documents uploaded</p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="mt-4 text-xs text-gray-500">
                   <p>Added: {new Date(beneficiary.createdAt).toLocaleString()}</p>
                   <p>Last Updated: {new Date(beneficiary.updatedAt).toLocaleString()}</p>
@@ -384,6 +568,44 @@ export default function BeneficiariesManagementPage() {
               </button>
               <button
                 onClick={() => deleteBeneficiary(deleteConfirm)}
+                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Document Confirmation Dialog */}
+      {deleteDocConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setDeleteDocConfirm(null)}
+          />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-start mb-4">
+              <AlertCircle className="h-6 w-6 text-red-600 mr-3 mt-0.5" />
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Delete Document
+                </h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  Are you sure you want to delete this document? This action
+                  cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                onClick={() => setDeleteDocConfirm(null)}
+                className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteDocument(deleteDocConfirm)}
                 className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
               >
                 Delete
