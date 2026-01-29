@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, FileSpreadsheet, FileText } from "lucide-react";
 import MembersList from "@/components/members/MemberList";
 import { LoadingButton } from "@/components/ui/LoadingButton";
 import { BulkEmailProgressModal } from "@/components/BulkEmailProgressModal";
+import { BulkEmailConfirmModal } from "@/components/BulkEmailConfirmModal";
 import toast from "react-hot-toast";
 
 export default function MembersPage() {
@@ -23,9 +24,14 @@ export default function MembersPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  // Bulk email progress states
+  // Bulk email states
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [isSendingEmails, setIsSendingEmails] = useState(false);
+  const [inactiveUsersCount, setInactiveUsersCount] = useState(0);
+  const [canSendBulkEmail, setCanSendBulkEmail] = useState(true);
+  const [lastSentDate, setLastSentDate] = useState<string | null>(null);
+  const [nextAvailableDate, setNextAvailableDate] = useState<string | null>(null);
   const [emailProgress, setEmailProgress] = useState({
     total: 0,
     processed: 0,
@@ -35,6 +41,11 @@ export default function MembersPage() {
     isComplete: false,
     failedEmails: [] as Array<{ email: string; error: string }>,
   });
+
+  // Check bulk email status on mount
+  useEffect(() => {
+    checkBulkEmailStatus();
+  }, []);
 
   const updateSearch = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -56,10 +67,32 @@ export default function MembersPage() {
     router.push(`/members?${params.toString()}`);
   };
 
+  const checkBulkEmailStatus = async () => {
+    try {
+      const response = await fetch("/api/members/bulk-email-status");
+      if (response.ok) {
+        const data = await response.json();
+        setCanSendBulkEmail(data.canSend);
+        setLastSentDate(data.lastSentDate);
+        setNextAvailableDate(data.nextAvailableDate);
+      }
+    } catch (error) {
+      console.error("Error checking bulk email status:", error);
+    }
+  };
+
   const handleBulkEmailInactive = async () => {
-    // If already sending emails, just reopen the modal
+    // If already sending emails, just reopen the progress modal
     if (isSendingEmails) {
       setShowProgressModal(true);
+      return;
+    }
+
+    // Check if allowed to send (weekly limit)
+    if (!canSendBulkEmail && nextAvailableDate) {
+      toast.error(
+        `You can send bulk emails again after ${new Date(nextAvailableDate).toLocaleDateString()}`
+      );
       return;
     }
 
@@ -73,13 +106,46 @@ export default function MembersPage() {
         throw new Error("Failed to fetch inactive users");
       }
 
-      const { users, total } = await listResponse.json();
+      const { total } = await listResponse.json();
 
       if (total === 0) {
         toast("No inactive users found");
         setLoading(false);
         return;
       }
+
+      // Show confirmation modal with user count
+      setInactiveUsersCount(total);
+      setShowConfirmModal(true);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching inactive users:", error);
+      toast.error("Failed to fetch inactive users");
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmBulkEmail = async () => {
+    try {
+      setShowConfirmModal(false);
+      setLoading(true);
+
+      // Record that bulk email is being sent (for weekly limit)
+      const statusResponse = await fetch("/api/members/bulk-email-status", {
+        method: "POST",
+      });
+
+      if (!statusResponse.ok) {
+        throw new Error("Failed to record bulk email status");
+      }
+
+      // Fetch users again for sending
+      const listResponse = await fetch("/api/members/inactive-list");
+      if (!listResponse.ok) {
+        throw new Error("Failed to fetch inactive users");
+      }
+
+      const { users, total } = await listResponse.json();
 
       // Initialize progress modal
       setEmailProgress({
@@ -94,6 +160,13 @@ export default function MembersPage() {
       setIsSendingEmails(true);
       setShowProgressModal(true);
       setLoading(false);
+
+      // Update status so button is disabled for a week
+      setCanSendBulkEmail(false);
+      const nextDate = new Date();
+      nextDate.setDate(nextDate.getDate() + 7);
+      setNextAvailableDate(nextDate.toISOString());
+      setLastSentDate(new Date().toISOString());
 
       // Send emails one by one
       let successful = 0;
@@ -237,16 +310,31 @@ export default function MembersPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Members Management</h1>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
           <LoadingButton
             onClick={handleBulkEmailInactive}
             loading={loading}
-            loadingText="Sending..."
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-md"
+            loadingText="Loading..."
+            disabled={!canSendBulkEmail}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+              canSendBulkEmail
+                ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+            title={
+              !canSendBulkEmail && nextAvailableDate
+                ? `Available again on ${new Date(nextAvailableDate).toLocaleDateString()}`
+                : 'Send activation emails to all inactive members'
+            }
           >
             <Mail className="h-4 w-4" />
             <span>Email Inactive</span>
           </LoadingButton>
+          {!canSendBulkEmail && nextAvailableDate && (
+            <span className="text-xs text-gray-500">
+              Available {new Date(nextAvailableDate).toLocaleDateString()}
+            </span>
+          )}
         </div>
       </div>
 
@@ -364,6 +452,15 @@ export default function MembersPage() {
       </div>
       
       <MembersList />
+
+      <BulkEmailConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmBulkEmail}
+        totalUsers={inactiveUsersCount}
+        lastSentDate={lastSentDate || undefined}
+        isLoading={loading}
+      />
 
       <BulkEmailProgressModal
         isOpen={showProgressModal}
