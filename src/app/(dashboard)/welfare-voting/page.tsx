@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Vote } from "lucide-react";
+import { Vote, ArrowLeft } from "lucide-react";
 import { LoadingLink } from "@/components/ui/LoadingLink";
 import { WelfareVotingList } from "@/components/welfare-voting/WelfareVotingList";
 import { WelfareVotingFilters } from "@/components/welfare-voting/WelfareVotingFilters";
@@ -46,6 +46,15 @@ export default async function WelfareVotingCampaignsPage(props: {
 
   return (
     <div className="space-y-6">
+      <div className="mb-4">
+        <LoadingLink
+          href="/welfare"
+          className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Welfare Dashboard
+        </LoadingLink>
+      </div>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Welfare Voting Campaigns</h1>

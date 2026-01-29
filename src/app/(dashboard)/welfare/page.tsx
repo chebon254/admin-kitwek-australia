@@ -9,7 +9,8 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  FileText
+  FileText,
+  Vote
 } from "lucide-react";
 
 export default async function WelfareDashboard() {
@@ -104,6 +105,13 @@ export default async function WelfareDashboard() {
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 hover:shadow-md"
           >
             <span>View Applications</span>
+          </LoadingLink>
+          <LoadingLink
+            href="/welfare-voting"
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-all duration-200 hover:shadow-md inline-flex items-center gap-2"
+          >
+            <Vote className="w-4 h-4" />
+            <span>Welfare Voting</span>
           </LoadingLink>
         </div>
       </div>
