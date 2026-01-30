@@ -6,13 +6,15 @@ import "./globals.css";
 const ubuntu = Ubuntu({
   variable: "--font-ubuntu-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "700"],
+  weight: ["400", "700"],
+  display: "swap",
 });
 
 const lora = Lora({
   variable: "--font-lora-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {

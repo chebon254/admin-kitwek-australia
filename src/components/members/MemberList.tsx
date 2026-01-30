@@ -32,7 +32,7 @@ export default function MembersList() {
           throw new Error('Failed to fetch members');
         }
         const data = await response.json();
-        setMembers(data);
+        setMembers(data.members || data);
       } catch (error) {
         console.error('Error fetching members:', error);
       } finally {
