@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function NewBlogPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -73,7 +71,7 @@ export default function NewBlogPage() {
 
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/blogs");
+        window.location.href = "/blogs";
       }, 5000);
     } catch (error) {
       console.error("Error creating blog:", error);

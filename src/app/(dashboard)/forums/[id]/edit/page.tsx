@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { SuccessNotification } from "@/components/SuccessNotification";
 
@@ -11,7 +10,6 @@ interface PageProps {
 }
 
 export default function EditForumPage({ params }: PageProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -30,12 +28,12 @@ export default function EditForumPage({ params }: PageProps) {
       } catch (error) {
         console.error('Error fetching forum:', error);
         toast.error('Failed to load forum');
-        router.push('/forums');
+        window.location.href = '/forums';
       }
     };
 
     fetchForum();
-  }, [params, router]);
+  }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +57,7 @@ export default function EditForumPage({ params }: PageProps) {
 
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/forums");
+        window.location.href = "/forums";
       }, 5000);
     } catch (error) {
       console.error("Error updating forum:", error);
@@ -103,7 +101,7 @@ export default function EditForumPage({ params }: PageProps) {
         <div className="flex gap-4">
           <button
             type="button"
-            onClick={() => router.push('/forums')}
+            onClick={() => window.location.href = '/forums'}
             className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition"
           >
             Cancel

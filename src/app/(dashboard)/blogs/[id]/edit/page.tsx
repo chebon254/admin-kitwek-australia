@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
@@ -13,7 +12,6 @@ interface PageProps {
 }
 
 export default function EditBlogPage({ params }: PageProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -40,12 +38,12 @@ export default function EditBlogPage({ params }: PageProps) {
       } catch (error) {
         console.error("Error fetching blog:", error);
         toast.error("Failed to load blog");
-        router.push("/blogs");
+        window.location.href = "/blogs";
       }
     };
 
     fetchBlog();
-  }, [params, router]);
+  }, [params]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,7 +106,7 @@ export default function EditBlogPage({ params }: PageProps) {
 
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/blogs");
+        window.location.href = "/blogs";
       }, 5000);
     } catch (error) {
       console.error("Error updating blog:", error);
@@ -252,7 +250,7 @@ export default function EditBlogPage({ params }: PageProps) {
         <div className="flex gap-4">
           <button
             type="button"
-            onClick={() => router.push("/blogs")}
+            onClick={() => window.location.href = "/blogs"}
             className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition"
           >
             Cancel

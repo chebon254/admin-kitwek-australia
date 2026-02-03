@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { CheckCircle, XCircle, DollarSign, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -18,7 +17,6 @@ interface Props {
 }
 
 export function WelfareApplicationActions({ application }: Props) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionForm, setShowRejectionForm] = useState(false);
@@ -41,7 +39,7 @@ export function WelfareApplicationActions({ application }: Props) {
       }
 
       toast.success("Application approved successfully");
-      router.refresh();
+      window.location.reload();
     } catch (error) {
       console.error("Error approving application:", error);
       toast.error(error instanceof Error ? error.message : "Failed to approve application");
@@ -74,7 +72,7 @@ export function WelfareApplicationActions({ application }: Props) {
       }
 
       toast.success("Application rejected");
-      router.refresh();
+      window.location.reload();
       setShowRejectionForm(false);
       setRejectionReason("");
     } catch (error) {
@@ -103,7 +101,7 @@ export function WelfareApplicationActions({ application }: Props) {
       }
 
       toast.success("Application marked as paid");
-      router.refresh();
+      window.location.reload();
     } catch (error) {
       console.error("Error marking as paid:", error);
       toast.error(error instanceof Error ? error.message : "Failed to mark as paid");

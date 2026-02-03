@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function NewForumPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -33,7 +31,7 @@ export default function NewForumPage() {
 
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/forums");
+        window.location.href = "/forums";
       }, 5000);
     } catch (error) {
       console.error("Error creating forum:", error);

@@ -2,21 +2,19 @@
 
 import { useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { isLoaded, userId } = useAuth();
-  const router = useRouter();
-  
+
   useEffect(() => {
     if (isLoaded) {
       if (!userId) {
-        router.push('/sign-in');
+        window.location.href = '/sign-in';
       } else {
-        router.push('/dashboard');
+        window.location.href = '/dashboard';
       }
     }
-  }, [isLoaded, userId, router]);
+  }, [isLoaded, userId]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">

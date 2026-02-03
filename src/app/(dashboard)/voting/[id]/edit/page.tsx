@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Upload, Save, Trash2 } from "lucide-react";
 import { LoadingLink } from "@/components/ui/LoadingLink";
 import Image from "next/image";
@@ -26,7 +25,6 @@ interface PageProps {
 }
 
 export default function EditVotingCampaignPage({ params }: PageProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [campaignId, setCampaignId] = useState<string>("");
@@ -80,12 +78,12 @@ export default function EditVotingCampaignPage({ params }: PageProps) {
       } catch (error) {
         console.error("Error fetching campaign:", error);
         toast.error("Failed to load campaign");
-        router.push("/voting");
+        window.location.href = "/voting";
       }
     };
 
     fetchCampaign();
-  }, [params, router]);
+  }, [params]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -218,7 +216,7 @@ export default function EditVotingCampaignPage({ params }: PageProps) {
 
       setShowSuccess(true);
       setTimeout(() => {
-        router.push(`/voting/${campaignId}`);
+        window.location.href = `/voting/${campaignId}`;
       }, 5000);
     } catch (error) {
       console.error("Error updating campaign:", error);

@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function NewDonationPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -63,7 +61,7 @@ export default function NewDonationPage() {
 
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/donations");
+        window.location.href = "/donations";
       }, 5000);
     } catch (error) {
       console.error("Error creating donation:", error);

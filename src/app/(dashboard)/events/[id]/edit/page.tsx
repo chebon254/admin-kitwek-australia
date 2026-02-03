@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
@@ -13,7 +12,6 @@ interface PageProps {
 }
 
 export default function EditEventPage({ params }: PageProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -53,12 +51,12 @@ export default function EditEventPage({ params }: PageProps) {
       } catch (error) {
         console.error('Error fetching event:', error);
         toast.error('Failed to load event');
-        router.push('/events');
+        window.location.href = '/events';
       }
     };
 
     fetchEvent();
-  }, [params, router]);
+  }, [params]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -114,7 +112,7 @@ export default function EditEventPage({ params }: PageProps) {
 
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/events");
+        window.location.href = "/events";
       }, 5000);
     } catch (error) {
       console.error("Error updating event:", error);
@@ -315,7 +313,7 @@ export default function EditEventPage({ params }: PageProps) {
         <div className="flex gap-4">
           <button
             type="button"
-            onClick={() => router.push('/events')}
+            onClick={() => window.location.href = '/events'}
             className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-md hover:bg-gray-200 transition"
           >
             Cancel

@@ -1,7 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { ArrowLeft, Search, Filter, Users, DollarSign, CheckCircle, Clock } from "lucide-react";
 import { WelfareRegistrationActions } from '@/components/welfare/WelfareRegistrationActions';
 import type { WelfareRegistrationWithUser } from '@/types/welfare';
@@ -118,9 +117,9 @@ export default async function WelfareRegistrationsPage(props: {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link href="/welfare" className="text-gray-500 hover:text-gray-700">
+          <a href="/welfare" className="text-gray-500 hover:text-gray-700">
             <ArrowLeft className="h-5 w-5" />
-          </Link>
+          </a>
           <div>
             <h1 className="text-2xl font-bold">Welfare Registrations</h1>
             <p className="text-gray-600 mt-1">Manage welfare fund registrations</p>
@@ -195,7 +194,7 @@ export default async function WelfareRegistrationsPage(props: {
             <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-gray-400" />
               <div className="flex gap-2">
-              <Link
+              <a
                 href="/welfare/registrations"
                 className={`px-3 py-1 rounded-md text-sm ${
                   status === 'all' 
@@ -204,8 +203,8 @@ export default async function WelfareRegistrationsPage(props: {
                 }`}
               >
                 All
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/welfare/registrations?status=active"
                 className={`px-3 py-1 rounded-md text-sm ${
                   status === 'active' 
@@ -214,8 +213,8 @@ export default async function WelfareRegistrationsPage(props: {
                 }`}
               >
                 Active
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/welfare/registrations?status=pending"
                 className={`px-3 py-1 rounded-md text-sm ${
                   status === 'pending' 
@@ -224,8 +223,8 @@ export default async function WelfareRegistrationsPage(props: {
                 }`}
               >
                 Pending
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/welfare/registrations?status=inactive"
                 className={`px-3 py-1 rounded-md text-sm ${
                   status === 'inactive'
@@ -234,7 +233,7 @@ export default async function WelfareRegistrationsPage(props: {
                 }`}
               >
                 Inactive
-              </Link>
+              </a>
             </div>
             </div>
 

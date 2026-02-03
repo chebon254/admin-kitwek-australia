@@ -4,13 +4,11 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function OnboardingPage() {
   const { user } = useUser();
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -144,7 +142,7 @@ export default function OnboardingPage() {
 
         setShowSuccess(true);
         setTimeout(() => {
-          router.push("/dashboard");
+          window.location.href = "/dashboard";
         }, 5000);
       } catch (error) {
         toast.dismiss(saveToast);

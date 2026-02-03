@@ -11,6 +11,14 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    rules: {
+      // Disable this rule since we intentionally use <a> tags for full page reloads
+      "@next/next/no-html-link-for-pages": "off",
+      // Downgrade to warning for dependency array issues
+      "react-hooks/exhaustive-deps": "warn",
+    },
+  },
 ];
 
 export default eslintConfig;

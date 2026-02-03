@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { LoadingLink } from "@/components/ui/LoadingLink";
 import toast from "react-hot-toast";
@@ -12,7 +11,6 @@ interface PageProps {
 }
 
 export default function EditWelfareVotingCampaignPage({ params }: PageProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -48,14 +46,14 @@ export default function EditWelfareVotingCampaignPage({ params }: PageProps) {
       } catch (error) {
         console.error("Error fetching campaign:", error);
         toast.error("Failed to load campaign");
-        router.push("/welfare-voting");
+        window.location.href = "/welfare-voting";
       } finally {
         setLoading(false);
       }
     };
 
     fetchCampaign();
-  }, [params, router]);
+  }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +82,7 @@ export default function EditWelfareVotingCampaignPage({ params }: PageProps) {
       setShowSuccess(true);
       toast.success("Campaign status updated successfully!");
       setTimeout(() => {
-        router.push(`/welfare-voting/${campaignId}`);
+        window.location.href = `/welfare-voting/${campaignId}`;
       }, 2000);
     } catch (error) {
       console.error("Error updating campaign:", error);

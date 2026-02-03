@@ -1,7 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { 
   ArrowLeft, 
   Search, 
@@ -115,9 +114,9 @@ export default async function WelfareApplicationsPage(props: {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link href="/welfare" className="text-gray-500 hover:text-gray-700">
+          <a href="/welfare" className="text-gray-500 hover:text-gray-700">
             <ArrowLeft className="h-5 w-5" />
-          </Link>
+          </a>
           <div>
             <h1 className="text-2xl font-bold">Welfare Applications</h1>
             <p className="text-gray-600 mt-1">Review and manage welfare claims</p>
@@ -191,7 +190,7 @@ export default async function WelfareApplicationsPage(props: {
               <Filter className="h-5 w-5 text-gray-400" />
               <span className="text-sm text-gray-600">Status:</span>
               <div className="flex gap-2">
-                <Link
+                <a
                   href="/welfare/applications"
                   className={`px-3 py-1 rounded-md text-sm ${
                     status === 'all' 
@@ -200,8 +199,8 @@ export default async function WelfareApplicationsPage(props: {
                   }`}
                 >
                   All
-                </Link>
-                <Link
+                </a>
+                <a
                   href="/welfare/applications?status=pending"
                   className={`px-3 py-1 rounded-md text-sm ${
                     status === 'pending' 
@@ -210,8 +209,8 @@ export default async function WelfareApplicationsPage(props: {
                   }`}
                 >
                   Pending
-                </Link>
-                <Link
+                </a>
+                <a
                   href="/welfare/applications?status=approved"
                   className={`px-3 py-1 rounded-md text-sm ${
                     status === 'approved' 
@@ -220,8 +219,8 @@ export default async function WelfareApplicationsPage(props: {
                   }`}
                 >
                   Approved
-                </Link>
-                <Link
+                </a>
+                <a
                   href="/welfare/applications?status=rejected"
                   className={`px-3 py-1 rounded-md text-sm ${
                     status === 'rejected' 
@@ -230,14 +229,14 @@ export default async function WelfareApplicationsPage(props: {
                   }`}
                 >
                   Rejected
-                </Link>
+                </a>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Type:</span>
               <div className="flex gap-2">
-                <Link
+                <a
                   href={`/welfare/applications?status=${status}`}
                   className={`px-3 py-1 rounded-md text-sm ${
                     type === 'all' 
@@ -246,8 +245,8 @@ export default async function WelfareApplicationsPage(props: {
                   }`}
                 >
                   All
-                </Link>
-                <Link
+                </a>
+                <a
                   href={`/welfare/applications?status=${status}&type=family_death`}
                   className={`px-3 py-1 rounded-md text-sm ${
                     type === 'family_death' 
@@ -256,8 +255,8 @@ export default async function WelfareApplicationsPage(props: {
                   }`}
                 >
                   Family
-                </Link>
-                <Link
+                </a>
+                <a
                   href={`/welfare/applications?status=${status}&type=member_death`}
                   className={`px-3 py-1 rounded-md text-sm ${
                     type === 'member_death' 
@@ -266,7 +265,7 @@ export default async function WelfareApplicationsPage(props: {
                   }`}
                 >
                   Member
-                </Link>
+                </a>
               </div>
             </div>
           </div>
@@ -365,12 +364,12 @@ export default async function WelfareApplicationsPage(props: {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link
+                      <a
                         href={`/welfare/applications/${application.id}`}
                         className="text-blue-600 hover:text-blue-800"
                       >
                         Review
-                      </Link>
+                      </a>
                     </td>
                   </tr>
                 ))}

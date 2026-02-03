@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { LoadingLink } from "@/components/ui/LoadingLink";
 import toast from "react-hot-toast";
@@ -14,7 +13,6 @@ export default function NewAdminPage() {
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,7 +45,7 @@ export default function NewAdminPage() {
       }
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/admins");
+        window.location.href = "/admins";
       }, 5000);
     } catch (error) {
       console.error("Error creating admin:", error);

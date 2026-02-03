@@ -1,8 +1,7 @@
 'use client';
 
-import Link from "next/link";
-import { usePathname, useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import UserDropdown from "./Navbar/UserDropdown";
 
@@ -48,8 +47,6 @@ export default function DashboardNav({ user, unreadNotifications }: DashboardNav
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [isNavigating, setIsNavigating] = useState(false);
   const isActive = pathname === href;
 
@@ -58,27 +55,27 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     if (pathname === href) return; // Don't navigate if already on this page
 
     setIsNavigating(true);
-    startTransition(() => {
-      router.push(href);
-      // Navigation completes when component unmounts or after a short delay
-      setTimeout(() => setIsNavigating(false), 500);
-    });
+
+    // Brief delay to show spinner, then trigger full page reload
+    setTimeout(() => {
+      window.location.href = href;
+    }, 100);
   };
 
   return (
-    <Link
+    <a
       href={href}
       onClick={handleClick}
       className={`inline-flex items-center gap-2 px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
         isActive
           ? 'border-blue-500 text-blue-600'
           : 'border-transparent text-gray-900 hover:border-gray-300 hover:text-gray-600'
-      } ${isNavigating || isPending ? 'opacity-70' : ''}`}
+      } ${isNavigating ? 'opacity-70' : ''}`}
     >
-      {(isNavigating || isPending) && (
+      {isNavigating && (
         <Loader2 className="h-4 w-4 animate-spin" />
       )}
       {children}
-    </Link>
+    </a>
   );
 }

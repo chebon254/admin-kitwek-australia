@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { ArrowLeft, User, Edit2, Save, X, Loader2, Trash2, AlertCircle, FileText, Upload, Download, Eye } from "lucide-react";
-import Link from "next/link";
 import toast from "react-hot-toast";
 
 interface FamilyDocument {
@@ -212,12 +211,12 @@ export default function BeneficiariesManagementPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link
+        <a
           href="/welfare/registrations"
           className="text-gray-500 hover:text-gray-700"
         >
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </a>
         <div>
           <h1 className="text-2xl font-bold">Manage Beneficiaries</h1>
           {userInfo && (

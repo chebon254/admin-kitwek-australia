@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Mail, FileSpreadsheet, FileText } from "lucide-react";
 import MembersList from "@/components/members/MemberList";
@@ -10,7 +10,6 @@ import { BulkEmailConfirmModal } from "@/components/BulkEmailConfirmModal";
 import toast from "react-hot-toast";
 
 export default function MembersPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const search = searchParams.get("search") || "";
   const status = searchParams.get("status") || "";
@@ -54,7 +53,7 @@ export default function MembersPage() {
     } else {
       params.delete("search");
     }
-    router.push(`/members?${params.toString()}`);
+    window.location.href = `/members?${params.toString()}`;
   };
 
   const updateStatus = (value: string) => {
@@ -64,7 +63,7 @@ export default function MembersPage() {
     } else {
       params.delete("status");
     }
-    router.push(`/members?${params.toString()}`);
+    window.location.href = `/members?${params.toString()}`;
   };
 
   const checkBulkEmailStatus = async () => {

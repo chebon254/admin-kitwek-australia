@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { uploadFile } from "@/lib/uploadFile";
 import Image from "next/image";
 import { SuccessNotification } from "@/components/SuccessNotification";
 
 export default function NewEventPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -80,7 +78,7 @@ export default function NewEventPage() {
 
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/events");
+        window.location.href = "/events";
       }, 5000);
     } catch (error) {
       console.error("Error creating event:", error);

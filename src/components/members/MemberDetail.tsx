@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import { User, Mail, Calendar, Clock, Shield, AlertTriangle } from "lucide-react";
 import { SuccessNotification } from "@/components/SuccessNotification";
 import toast from "react-hot-toast";
@@ -27,7 +25,6 @@ interface MemberProps {
 }
 
 export default function MemberDetail({ member }: MemberProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
   const [revokeReason, setRevokeReason] = useState("");
@@ -48,7 +45,7 @@ export default function MemberDetail({ member }: MemberProps) {
       setNotificationMessage(`Activation email has been sent to ${member.email}`);
       setShowNotification(true);
       
-      router.refresh();
+      window.location.reload();
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to send activation email");
@@ -72,7 +69,7 @@ export default function MemberDetail({ member }: MemberProps) {
       setNotificationMessage(`Member access has been revoked for ${member.firstName} ${member.lastName}`);
       setShowNotification(true);
       setShowRevokeModal(false);
-      router.refresh();
+      window.location.reload();
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to revoke member access");
@@ -93,7 +90,7 @@ export default function MemberDetail({ member }: MemberProps) {
       toast.success("Member access restored successfully");
       setNotificationMessage(`Member access has been restored for ${member.firstName} ${member.lastName}`);
       setShowNotification(true);
-      router.refresh();
+      window.location.reload();
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to restore member access");
@@ -106,12 +103,12 @@ export default function MemberDetail({ member }: MemberProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Member Details</h1>
-        <Link
+        <a
           href="/members"
           className="text-blue-600 hover:text-blue-800"
         >
           Back to Members
-        </Link>
+        </a>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

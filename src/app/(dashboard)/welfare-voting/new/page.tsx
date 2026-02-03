@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, X, Upload, Save } from "lucide-react";
 import { LoadingLink } from "@/components/ui/LoadingLink";
 import Image from "next/image";
@@ -19,7 +18,6 @@ interface Candidate {
 }
 
 export default function NewWelfareVotingCampaignPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -140,7 +138,7 @@ export default function NewWelfareVotingCampaignPage() {
 
       setShowSuccess(true);
       setTimeout(() => {
-        router.push("/welfare-voting");
+        window.location.href = "/welfare-voting";
       }, 5000);
     } catch (error) {
       console.error("Error creating campaign:", error);

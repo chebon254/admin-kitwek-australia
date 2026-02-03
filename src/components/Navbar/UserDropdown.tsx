@@ -2,9 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useClerk } from "@clerk/nextjs";
-import { useRouter } from 'next/navigation';
 import { 
   ChevronDown, 
   Bell, 
@@ -26,7 +24,6 @@ export default function UserDropdown({ user, unreadNotifications = 0 }: UserDrop
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { signOut } = useClerk();
-  const router = useRouter();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -41,7 +38,7 @@ export default function UserDropdown({ user, unreadNotifications = 0 }: UserDrop
 
   const handleSignOut = async () => {
     await signOut();
-    router.push('/sign-in');
+    window.location.href = '/sign-in';
   };
 
   return (
@@ -73,7 +70,7 @@ export default function UserDropdown({ user, unreadNotifications = 0 }: UserDrop
           </div>
 
           <div className="py-2">
-            <Link
+            <a
               href="/notifications"
               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition relative"
               onClick={() => setIsOpen(false)}
@@ -85,23 +82,23 @@ export default function UserDropdown({ user, unreadNotifications = 0 }: UserDrop
                   {unreadNotifications}
                 </span>
               )}
-            </Link>
-            <Link
+            </a>
+            <a
               href="/logs"
               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
               onClick={() => setIsOpen(false)}
             >
               <ClipboardList className="h-4 w-4" />
               System Logs
-            </Link>
-            <Link
+            </a>
+            <a
               href="/admins"
               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
               onClick={() => setIsOpen(false)}
             >
               <Users className="h-4 w-4" />
               Manage Admins
-            </Link>
+            </a>
           </div>
 
           <div className="border-t border-gray-100 pt-2">
