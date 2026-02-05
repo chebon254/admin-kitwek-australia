@@ -138,17 +138,9 @@ export default function MembersPage() {
         throw new Error("Failed to record bulk email status");
       }
 
-      // Fetch users again for sending
-      const listResponse = await fetch("/api/members/inactive-list");
-      if (!listResponse.ok) {
-        throw new Error("Failed to fetch inactive users");
-      }
-
-      const { users, total } = await listResponse.json();
-
       // Initialize progress modal
       setEmailProgress({
-        total,
+        total: inactiveUsersCount,
         processed: 0,
         successful: 0,
         failed: 0,
@@ -167,80 +159,69 @@ export default function MembersPage() {
       setNextAvailableDate(nextDate.toISOString());
       setLastSentDate(new Date().toISOString());
 
-      // Send emails one by one
-      let successful = 0;
-      let failed = 0;
-      const failedEmails: Array<{ email: string; error: string }> = [];
+      // Single POST — server handles all sending with pooled connections and streams progress
+      const response = await fetch("/api/members/bulk-email-inactive", {
+        method: "POST",
+      });
 
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
+      if (!response.ok || !response.body) {
+        throw new Error("Failed to start sending");
+      }
 
-        // Update current email being processed
-        setEmailProgress(prev => ({
-          ...prev,
-          currentEmail: user.email,
-        }));
+      // Read the NDJSON stream for real-time progress
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-        try {
-          const emailResponse = await fetch("/api/members/send-activation-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              userId: user.id,
-            }),
-          });
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-          const result = await emailResponse.json();
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || "";
 
-          if (result.success) {
-            successful++;
-          } else {
-            failed++;
-            failedEmails.push({
-              email: user.email,
-              error: result.error || "Unknown error",
-            });
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const event = JSON.parse(line);
+
+            if (event.type === 'start') {
+              setEmailProgress(prev => ({ ...prev, total: event.total }));
+            } else if (event.type === 'progress') {
+              setEmailProgress({
+                total: event.total,
+                processed: event.processed,
+                successful: event.successful,
+                failed: event.failed,
+                currentEmail: event.currentEmail || "",
+                isComplete: false,
+                failedEmails: event.failedEmails || [],
+              });
+            } else if (event.type === 'complete') {
+              setEmailProgress({
+                total: event.total,
+                processed: event.processed,
+                successful: event.successful,
+                failed: event.failed,
+                currentEmail: "",
+                isComplete: true,
+                failedEmails: event.failedEmails || [],
+              });
+
+              if (event.failed === 0) {
+                toast.success(`All ${event.successful} emails sent successfully!`);
+              } else {
+                toast.error(`${event.successful} emails sent, ${event.failed} failed`);
+              }
+            }
+          } catch {
+            // Skip malformed lines
           }
-        } catch (error) {
-          failed++;
-          failedEmails.push({
-            email: user.email,
-            error: error instanceof Error ? error.message : "Network error",
-          });
-        }
-
-        // Update progress
-        setEmailProgress(prev => ({
-          ...prev,
-          processed: i + 1,
-          successful,
-          failed,
-          failedEmails,
-        }));
-
-        // Small delay between emails to avoid overwhelming the server
-        if (i < users.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
 
-      // Mark as complete
-      setEmailProgress(prev => ({
-        ...prev,
-        isComplete: true,
-        currentEmail: "",
-      }));
       setIsSendingEmails(false);
-
-      // Show toast notification
-      if (failed === 0) {
-        toast.success(`All ${successful} emails sent successfully!`);
-      } else {
-        toast.error(`${successful} emails sent, ${failed} failed`);
-      }
 
     } catch (error) {
       console.error("Error sending bulk emails:", error);
@@ -327,7 +308,7 @@ export default function MembersPage() {
             }
           >
             <Mail className="h-4 w-4" />
-            <span>Email Inactive</span>
+            <span>Send Email to Inactive Users</span>
           </LoadingButton>
           {!canSendBulkEmail && nextAvailableDate && (
             <span className="text-xs text-gray-500">

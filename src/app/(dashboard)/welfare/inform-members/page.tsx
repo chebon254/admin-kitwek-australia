@@ -4,13 +4,6 @@ import { useState } from "react";
 import { ArrowLeft, Mail, Eye, EyeOff, Send, Users, CheckCircle, XCircle, Loader2, AlertCircle, X } from "lucide-react";
 import toast from "react-hot-toast";
 
-interface Recipient {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-}
-
 function convertTextToHtml(text: string): string {
   return text
     .split(/\n\s*\n/)
@@ -27,6 +20,16 @@ function convertTextToHtml(text: string): string {
     .join('\n');
 }
 
+interface ProgressState {
+  total: number;
+  processed: number;
+  successful: number;
+  failed: number;
+  currentEmail: string;
+  isComplete: boolean;
+  failedEmails: Array<{ email: string; error: string }>;
+}
+
 export default function InformMembersPage() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -40,14 +43,14 @@ export default function InformMembersPage() {
 
   // Progress modal
   const [showProgress, setShowProgress] = useState(false);
-  const [progress, setProgress] = useState({
+  const [progress, setProgress] = useState<ProgressState>({
     total: 0,
     processed: 0,
     successful: 0,
     failed: 0,
     currentEmail: "",
     isComplete: false,
-    failedEmails: [] as Array<{ email: string; error: string }>,
+    failedEmails: [],
   });
 
   const htmlMessage = convertTextToHtml(message);
@@ -88,15 +91,9 @@ export default function InformMembersPage() {
   const handleConfirmSend = async () => {
     try {
       setShowConfirm(false);
-      setLoading(true);
-
-      const response = await fetch("/api/welfare/inform-members");
-      if (!response.ok) throw new Error("Failed to fetch recipients");
-
-      const { recipients, total }: { recipients: Recipient[]; total: number } = await response.json();
 
       setProgress({
-        total,
+        total: recipientCount,
         processed: 0,
         successful: 0,
         failed: 0,
@@ -106,80 +103,78 @@ export default function InformMembersPage() {
       });
       setIsSending(true);
       setShowProgress(true);
-      setLoading(false);
 
-      let successful = 0;
-      let failed = 0;
-      const failedEmails: Array<{ email: string; error: string }> = [];
+      // Single POST request — server handles all sending and streams progress
+      const response = await fetch("/api/welfare/inform-members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: subject.trim(),
+          htmlMessage,
+        }),
+      });
 
-      for (let i = 0; i < recipients.length; i++) {
-        const recipient = recipients[i];
+      if (!response.ok || !response.body) {
+        throw new Error("Failed to start sending");
+      }
 
-        setProgress(prev => ({
-          ...prev,
-          currentEmail: recipient.email,
-        }));
+      // Read the NDJSON stream
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-        try {
-          const emailResponse = await fetch("/api/welfare/inform-members", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: recipient.email,
-              firstName: recipient.firstName,
-              subject: subject.trim(),
-              htmlMessage,
-            }),
-          });
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-          const result = await emailResponse.json();
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || "";
 
-          if (result.success) {
-            successful++;
-          } else {
-            failed++;
-            failedEmails.push({
-              email: recipient.email,
-              error: result.error || "Unknown error",
-            });
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const event = JSON.parse(line);
+
+            if (event.type === 'start') {
+              setProgress(prev => ({ ...prev, total: event.total }));
+            } else if (event.type === 'progress') {
+              setProgress({
+                total: event.total,
+                processed: event.processed,
+                successful: event.successful,
+                failed: event.failed,
+                currentEmail: event.currentEmail || "",
+                isComplete: false,
+                failedEmails: event.failedEmails || [],
+              });
+            } else if (event.type === 'complete') {
+              setProgress({
+                total: event.total,
+                processed: event.processed,
+                successful: event.successful,
+                failed: event.failed,
+                currentEmail: "",
+                isComplete: true,
+                failedEmails: event.failedEmails || [],
+              });
+
+              if (event.failed === 0) {
+                toast.success(`All ${event.successful} emails sent successfully!`);
+              } else {
+                toast.error(`${event.successful} sent, ${event.failed} failed`);
+              }
+            }
+          } catch {
+            // Skip malformed lines
           }
-        } catch (error) {
-          failed++;
-          failedEmails.push({
-            email: recipient.email,
-            error: error instanceof Error ? error.message : "Network error",
-          });
-        }
-
-        setProgress(prev => ({
-          ...prev,
-          processed: i + 1,
-          successful,
-          failed,
-          failedEmails,
-        }));
-
-        if (i < recipients.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
 
-      setProgress(prev => ({
-        ...prev,
-        isComplete: true,
-        currentEmail: "",
-      }));
       setIsSending(false);
-
-      if (failed === 0) {
-        toast.success(`All ${successful} emails sent successfully!`);
-      } else {
-        toast.error(`${successful} sent, ${failed} failed`);
-      }
     } catch (error) {
       console.error("Error sending emails:", error);
       toast.error("Failed to send emails");
-      setLoading(false);
       setIsSending(false);
       setShowProgress(false);
     }
@@ -294,7 +289,7 @@ export default function InformMembersPage() {
         <div className="flex justify-end">
           <button
             onClick={handleSendClick}
-            disabled={loading || !subject.trim() || !message.trim()}
+            disabled={loading || isSending || !subject.trim() || !message.trim()}
             className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
