@@ -89,8 +89,8 @@ export default async function WelfareRegistrationsPage(props: {
   // Calculate statistics
   const totalRegistrations = registrations.length;
   const activeCount = registrations.filter(r => r.status === 'ACTIVE' && r.paymentStatus === 'PAID').length;
-  const pendingCount = registrations.filter(r => r.paymentStatus === 'PENDING').length;
-  const totalAmount = activeCount * 200;
+  const pendingCount = registrations.filter(r => r.status === 'INACTIVE' && r.paymentStatus === 'PENDING').length;
+  const totalAmount = activeCount * 100;
 
   const getStatusBadge = (registration: RegistrationWithUser): string => {
     if (registration.status === 'ACTIVE' && registration.paymentStatus === 'PAID') {

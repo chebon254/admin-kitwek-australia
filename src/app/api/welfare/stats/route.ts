@@ -35,7 +35,7 @@ export async function GET() {
     });
 
     const pendingRegistrations = await prisma.welfareRegistration.count({
-      where: { paymentStatus: 'PENDING' }
+      where: { status: 'INACTIVE', paymentStatus: 'PENDING' }
     });
 
     // Get application counts
@@ -51,7 +51,7 @@ export async function GET() {
     });
 
     // Calculate total amounts
-    const totalFundAmount = activeRegistrations * 200;
+    const totalFundAmount = activeRegistrations * 100;
     const totalPaidClaims = await prisma.welfareApplication.aggregate({
       where: { status: 'PAID' },
       _sum: { claimAmount: true }
