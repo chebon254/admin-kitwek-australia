@@ -439,3 +439,23 @@ model WelfareVote {
   @@index([campaignId])
   @@index([userId])
 }
+
+model EmailCampaign {
+  id              String    @id @default(uuid())
+  type            String    // WELFARE_NOTIFICATION, ACTIVATION_REMINDER
+  subject         String
+  htmlMessage     String?   @db.Text
+  totalRecipients Int
+  sentCount       Int       @default(0)
+  failedCount     Int       @default(0)
+  status          String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  recipients      String    @db.LongText // JSON array of recipients
+  failedEmails    String?   @db.Text // JSON array of failed emails
+  adminId         String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+
+  @@index([status])
+  @@index([adminId])
+}

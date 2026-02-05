@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Mail, Eye, EyeOff, Send, Users, CheckCircle, XCircle, Loader2, AlertCircle, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { ArrowLeft, Mail, Eye, EyeOff, Send, Users, CheckCircle, XCircle, Loader2, AlertCircle, X, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 
 function convertTextToHtml(text: string): string {
@@ -20,14 +20,16 @@ function convertTextToHtml(text: string): string {
     .join('\n');
 }
 
-interface ProgressState {
-  total: number;
-  processed: number;
-  successful: number;
-  failed: number;
-  currentEmail: string;
-  isComplete: boolean;
-  failedEmails: Array<{ email: string; error: string }>;
+interface Campaign {
+  id: string;
+  subject?: string;
+  status: string;
+  totalRecipients: number;
+  sentCount: number;
+  failedCount: number;
+  failedEmails?: Array<{ email: string; error: string }>;
+  createdAt: string;
+  completedAt: string | null;
 }
 
 export default function InformMembersPage() {
@@ -35,25 +37,37 @@ export default function InformMembersPage() {
   const [message, setMessage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
 
   // Confirmation modal
   const [showConfirm, setShowConfirm] = useState(false);
   const [recipientCount, setRecipientCount] = useState(0);
 
-  // Progress modal
-  const [showProgress, setShowProgress] = useState(false);
-  const [progress, setProgress] = useState<ProgressState>({
-    total: 0,
-    processed: 0,
-    successful: 0,
-    failed: 0,
-    currentEmail: "",
-    isComplete: false,
-    failedEmails: [],
-  });
+  // Campaign tracking
+  const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(null);
+  const [recentCampaigns, setRecentCampaigns] = useState<Campaign[]>([]);
+  const [showCampaignDetails, setShowCampaignDetails] = useState<Campaign | null>(null);
 
   const htmlMessage = convertTextToHtml(message);
+
+  const fetchStatus = useCallback(async () => {
+    try {
+      const response = await fetch("/api/welfare/inform-members");
+      if (!response.ok) return;
+      const data = await response.json();
+      setRecipientCount(data.total);
+      setActiveCampaign(data.activeCampaign);
+      setRecentCampaigns(data.recentCampaigns || []);
+    } catch {
+      // Silently fail on status polling
+    }
+  }, []);
+
+  // Poll for status updates
+  useEffect(() => {
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 10000);
+    return () => clearInterval(interval);
+  }, [fetchStatus]);
 
   const handleSendClick = async () => {
     if (!subject.trim() || !message.trim()) {
@@ -61,50 +75,25 @@ export default function InformMembersPage() {
       return;
     }
 
-    if (isSending) {
-      setShowProgress(true);
+    if (activeCampaign) {
+      toast.error("A campaign is already in progress. Please wait for it to complete.");
       return;
     }
 
-    try {
-      setLoading(true);
-      const response = await fetch("/api/welfare/inform-members");
-      if (!response.ok) throw new Error("Failed to fetch recipients");
-
-      const data = await response.json();
-      if (data.total === 0) {
-        toast("No active welfare members found");
-        setLoading(false);
-        return;
-      }
-
-      setRecipientCount(data.total);
-      setShowConfirm(true);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching recipients:", error);
-      toast.error("Failed to fetch member list");
-      setLoading(false);
+    await fetchStatus();
+    if (recipientCount === 0) {
+      toast("No active welfare members found");
+      return;
     }
+
+    setShowConfirm(true);
   };
 
   const handleConfirmSend = async () => {
     try {
       setShowConfirm(false);
+      setLoading(true);
 
-      setProgress({
-        total: recipientCount,
-        processed: 0,
-        successful: 0,
-        failed: 0,
-        currentEmail: "",
-        isComplete: false,
-        failedEmails: [],
-      });
-      setIsSending(true);
-      setShowProgress(true);
-
-      // Single POST request — server handles all sending and streams progress
       const response = await fetch("/api/welfare/inform-members", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -114,88 +103,42 @@ export default function InformMembersPage() {
         }),
       });
 
-      if (!response.ok || !response.body) {
-        throw new Error("Failed to start sending");
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || "Failed to create campaign");
+        setLoading(false);
+        return;
       }
 
-      // Read the NDJSON stream
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
+      toast.success(data.message);
+      setSubject("");
+      setMessage("");
+      setLoading(false);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const event = JSON.parse(line);
-
-            if (event.type === 'start') {
-              setProgress(prev => ({ ...prev, total: event.total }));
-            } else if (event.type === 'progress') {
-              setProgress({
-                total: event.total,
-                processed: event.processed,
-                successful: event.successful,
-                failed: event.failed,
-                currentEmail: event.currentEmail || "",
-                isComplete: false,
-                failedEmails: event.failedEmails || [],
-              });
-            } else if (event.type === 'complete') {
-              setProgress({
-                total: event.total,
-                processed: event.processed,
-                successful: event.successful,
-                failed: event.failed,
-                currentEmail: "",
-                isComplete: true,
-                failedEmails: event.failedEmails || [],
-              });
-
-              if (event.failed === 0) {
-                toast.success(`All ${event.successful} emails sent successfully!`);
-              } else {
-                toast.error(`${event.successful} sent, ${event.failed} failed`);
-              }
-            }
-          } catch {
-            // Skip malformed lines
-          }
-        }
-      }
-
-      setIsSending(false);
+      // Refresh status to show the new campaign
+      await fetchStatus();
     } catch (error) {
-      console.error("Error sending emails:", error);
-      toast.error("Failed to send emails");
-      setIsSending(false);
-      setShowProgress(false);
+      console.error("Error creating campaign:", error);
+      toast.error("Failed to create campaign");
+      setLoading(false);
     }
   };
 
-  const handleCloseProgress = () => {
-    setShowProgress(false);
-    if (progress.isComplete) {
-      setProgress({
-        total: 0,
-        processed: 0,
-        successful: 0,
-        failed: 0,
-        currentEmail: "",
-        isComplete: false,
-        failedEmails: [],
-      });
+  const fetchCampaignDetails = async (campaignId: string) => {
+    try {
+      const response = await fetch(`/api/welfare/inform-members?campaignId=${campaignId}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      setShowCampaignDetails(data);
+    } catch {
+      toast.error("Failed to fetch campaign details");
     }
   };
 
-  const progressPercent = progress.total > 0 ? (progress.processed / progress.total) * 100 : 0;
+  const progressPercent = activeCampaign
+    ? ((activeCampaign.sentCount + activeCampaign.failedCount) / activeCampaign.totalRecipients) * 100
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -210,6 +153,36 @@ export default function InformMembersPage() {
         </div>
       </div>
 
+      {/* Active Campaign Banner */}
+      {activeCampaign && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+              <h3 className="font-medium text-blue-900">Campaign In Progress</h3>
+            </div>
+            <span className="text-sm text-blue-700">
+              {activeCampaign.sentCount + activeCampaign.failedCount} / {activeCampaign.totalRecipients} processed
+            </span>
+          </div>
+          <div className="w-full bg-blue-200 rounded-full h-2 mb-2">
+            <div
+              className="h-full bg-blue-600 rounded-full transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className="flex gap-4 text-sm">
+            <span className="text-green-700">{activeCampaign.sentCount} sent</span>
+            {activeCampaign.failedCount > 0 && (
+              <span className="text-red-700">{activeCampaign.failedCount} failed</span>
+            )}
+            <span className="text-blue-700">
+              ~{Math.ceil((activeCampaign.totalRecipients - activeCampaign.sentCount - activeCampaign.failedCount) / 50) * 20} min remaining
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Compose Form */}
       <div className="bg-white rounded-lg shadow p-6 space-y-6">
         <div>
@@ -223,6 +196,7 @@ export default function InformMembersPage() {
             onChange={e => setSubject(e.target.value)}
             placeholder="e.g. Welfare Support Notice - Passing of a Member"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            disabled={!!activeCampaign}
           />
         </div>
 
@@ -231,7 +205,7 @@ export default function InformMembersPage() {
             Message
           </label>
           <p className="text-xs text-gray-500 mb-2">
-            Write your message in plain text. Separate paragraphs with a blank line. Each paragraph will be formatted as a separate block in the email.
+            Write your message in plain text. Separate paragraphs with a blank line. Each paragraph will be formatted as a separate block in the email. Emails are sent in batches of 50 every 20 minutes to comply with email provider limits.
           </p>
           <textarea
             id="message"
@@ -240,6 +214,7 @@ export default function InformMembersPage() {
             rows={12}
             placeholder={`It is with deep sorrow that we inform you of the passing of our beloved member, [Name].\n\n[Name] was a valued member of our Kitwek Australia community and will be greatly missed by all who knew them.\n\nAs per our welfare fund guidelines, we will be processing the welfare claim to support the family during this difficult time. Each active member will be required to contribute the agreed welfare amount.\n\nPlease keep the family in your thoughts and prayers during this time.`}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono text-sm"
+            disabled={!!activeCampaign}
           />
         </div>
 
@@ -255,7 +230,6 @@ export default function InformMembersPage() {
           </button>
         </div>
 
-        {/* Email Preview */}
         {showPreview && (
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -275,10 +249,10 @@ export default function InformMembersPage() {
                   ) : (
                     <p style={{ color: "#999", fontStyle: "italic" }}>Your message will appear here...</p>
                   )}
-                  <p style={{ color: "#333" }}>Kind regards,<br />Kitwek Australia Welfare Committee</p>
+                  <p style={{ color: "#333" }}>Kind regards,<br />Kitwek Victoria Welfare Committee</p>
                 </div>
                 <div style={{ textAlign: "center", paddingTop: 16, borderTop: "2px solid #f0f0f0", color: "#666", fontSize: 12 }}>
-                  <p>This email was sent by Kitwek Australia Welfare</p>
+                  <p>This email was sent by Kitwek Victoria Welfare Committee</p>
                 </div>
               </div>
             </div>
@@ -289,23 +263,67 @@ export default function InformMembersPage() {
         <div className="flex justify-end">
           <button
             onClick={handleSendClick}
-            disabled={loading || isSending || !subject.trim() || !message.trim()}
+            disabled={loading || !!activeCampaign || !subject.trim() || !message.trim()}
             className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Loading...</span>
+                <span>Creating campaign...</span>
               </>
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                <span>Send to All Active Members</span>
+                <span>Send to All Active Members ({recipientCount})</span>
               </>
             )}
           </button>
         </div>
       </div>
+
+      {/* Recent Campaigns */}
+      {recentCampaigns.length > 0 && (
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900">Recent Campaigns (Last 24h)</h3>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {recentCampaigns.map(campaign => (
+              <div key={campaign.id} className="px-6 py-4 flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-gray-900">{campaign.subject}</p>
+                  <p className="text-sm text-gray-500">
+                    {new Date(campaign.createdAt).toLocaleString()} &middot; {campaign.totalRecipients} recipients
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right text-sm">
+                    <span className="text-green-600">{campaign.sentCount} sent</span>
+                    {campaign.failedCount > 0 && (
+                      <span className="text-red-600 ml-2">{campaign.failedCount} failed</span>
+                    )}
+                  </div>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    campaign.status === 'COMPLETED' ? 'bg-green-100 text-green-800'
+                    : campaign.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800'
+                    : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {campaign.status === 'IN_PROGRESS' ? 'Sending' : campaign.status === 'COMPLETED' ? 'Complete' : 'Queued'}
+                  </span>
+                  {campaign.failedCount > 0 && campaign.status === 'COMPLETED' && (
+                    <button
+                      onClick={() => fetchCampaignDetails(campaign.id)}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Details
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {showConfirm && (
@@ -318,13 +336,13 @@ export default function InformMembersPage() {
               </button>
             </div>
             <div className="p-6">
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
                 <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-yellow-400 mt-0.5 mr-3 flex-shrink-0" />
+                  <Clock className="h-5 w-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
                   <div>
-                    <h3 className="text-sm font-medium text-yellow-800">Please Confirm</h3>
-                    <p className="mt-1 text-sm text-yellow-700">
-                      This will send an email to all active welfare members. Please review your message before proceeding.
+                    <h3 className="text-sm font-medium text-blue-800">Batch Sending</h3>
+                    <p className="mt-1 text-sm text-blue-700">
+                      Emails will be sent in batches of 50 every 20 minutes to comply with email provider rate limits. Estimated time: ~{Math.ceil(recipientCount / 50) * 20} minutes.
                     </p>
                   </div>
                 </div>
@@ -351,9 +369,9 @@ export default function InformMembersPage() {
               </div>
 
               <p className="text-sm text-gray-700">
-                Are you sure you want to send this email to{" "}
+                Create this campaign to send emails to{" "}
                 <span className="font-semibold text-gray-900">{recipientCount}</span>{" "}
-                active welfare members?
+                active welfare members? You can close this page — emails will continue sending in the background.
               </p>
             </div>
             <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
@@ -368,91 +386,56 @@ export default function InformMembersPage() {
                 className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors flex items-center gap-2"
               >
                 <Mail className="h-4 w-4" />
-                <span>Send Emails</span>
+                <span>Create Campaign</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Progress Modal */}
-      {showProgress && (
+      {/* Campaign Details Modal */}
+      {showCampaignDetails && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
             <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {progress.isComplete ? "Emails Sent" : "Sending Welfare Notification"}
-              </h2>
-              {progress.isComplete && (
-                <button onClick={handleCloseProgress} className="text-gray-400 hover:text-gray-600" title="Close">
-                  <X className="h-6 w-6" />
-                </button>
-              )}
+              <h2 className="text-xl font-semibold text-gray-900">Campaign Details</h2>
+              <button onClick={() => setShowCampaignDetails(null)} className="text-gray-400 hover:text-gray-600" title="Close">
+                <X className="h-6 w-6" />
+              </button>
             </div>
             <div className="p-6">
-              {/* Progress Bar */}
-              <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Progress</span>
-                  <span>{progress.processed} / {progress.total}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      progress.isComplete
-                        ? progress.failed > 0 ? "bg-yellow-500" : "bg-green-500"
-                        : "bg-orange-500"
-                    }`}
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Stats */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Total</span>
                     <Users className="h-4 w-4 text-blue-600" />
                   </div>
-                  <div className="text-2xl font-bold text-blue-600 mt-1">{progress.total}</div>
+                  <div className="text-2xl font-bold text-blue-600 mt-1">{showCampaignDetails.totalRecipients}</div>
                 </div>
                 <div className="bg-green-50 rounded-lg p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Successful</span>
+                    <span className="text-sm text-gray-600">Sent</span>
                     <CheckCircle className="h-4 w-4 text-green-600" />
                   </div>
-                  <div className="text-2xl font-bold text-green-600 mt-1">{progress.successful}</div>
+                  <div className="text-2xl font-bold text-green-600 mt-1">{showCampaignDetails.sentCount}</div>
                 </div>
                 <div className="bg-red-50 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Failed</span>
                     <XCircle className="h-4 w-4 text-red-600" />
                   </div>
-                  <div className="text-2xl font-bold text-red-600 mt-1">{progress.failed}</div>
+                  <div className="text-2xl font-bold text-red-600 mt-1">{showCampaignDetails.failedCount}</div>
                 </div>
               </div>
 
-              {/* Current Email */}
-              {!progress.isComplete && progress.currentEmail && (
-                <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 text-gray-600 animate-spin" />
-                    <span className="text-sm text-gray-600">Sending to:</span>
-                    <span className="text-sm font-medium text-gray-900">{progress.currentEmail}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Failed Emails */}
-              {progress.failedEmails.length > 0 && (
-                <div className="border border-red-200 rounded-lg p-4 bg-red-50 mb-4">
+              {showCampaignDetails.failedEmails && showCampaignDetails.failedEmails.length > 0 && (
+                <div className="border border-red-200 rounded-lg p-4 bg-red-50">
                   <div className="flex items-center gap-2 mb-3">
                     <AlertCircle className="h-5 w-5 text-red-600" />
-                    <h3 className="font-medium text-red-900">Failed Emails ({progress.failedEmails.length})</h3>
+                    <h3 className="font-medium text-red-900">Failed Emails ({showCampaignDetails.failedEmails.length})</h3>
                   </div>
-                  <div className="max-h-40 overflow-y-auto space-y-2">
-                    {progress.failedEmails.map((item, index) => (
+                  <div className="max-h-60 overflow-y-auto space-y-2">
+                    {showCampaignDetails.failedEmails.map((item, index) => (
                       <div key={index} className="text-sm">
                         <div className="font-medium text-red-900">{item.email}</div>
                         <div className="text-red-700 text-xs">{item.error}</div>
@@ -461,46 +444,14 @@ export default function InformMembersPage() {
                   </div>
                 </div>
               )}
-
-              {/* Completion */}
-              {progress.isComplete && (
-                <div className={`rounded-lg p-4 ${
-                  progress.failed > 0 ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200"
-                }`}>
-                  <div className="flex items-center gap-2">
-                    {progress.failed > 0 ? (
-                      <>
-                        <AlertCircle className="h-5 w-5 text-yellow-600" />
-                        <p className="text-sm text-yellow-900">
-                          Completed with {progress.failed} error{progress.failed !== 1 ? "s" : ""}. {progress.successful} email{progress.successful !== 1 ? "s" : ""} sent successfully.
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        <p className="text-sm text-green-900">
-                          All emails sent successfully! {progress.successful} welfare notification{progress.successful !== 1 ? "s" : ""} delivered.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
-            <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
-              {progress.isComplete ? (
-                <button
-                  onClick={handleCloseProgress}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
-                >
-                  Close
-                </button>
-              ) : (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Sending emails... Please wait</span>
-                </div>
-              )}
+            <div className="flex justify-end p-6 border-t bg-gray-50">
+              <button
+                onClick={() => setShowCampaignDetails(null)}
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
