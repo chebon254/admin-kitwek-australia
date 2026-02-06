@@ -51,8 +51,46 @@ export default async function WelfareDashboard() {
     where: { status: 'APPROVED' }
   });
 
-  // Calculate total fund amount
-  const totalFundAmount = activeRegistrations * 100;
+  // Get welfare fund with accurate balance tracking
+  const welfareFund = await prisma.welfareFund.findFirst({
+    orderBy: { createdAt: 'desc' }
+  });
+  const totalFundAmount = welfareFund?.totalAmount || 0;
+
+  // Get reimbursement statistics
+  const totalReimbursementsDue = await prisma.welfareReimbursement.count({
+    where: { status: 'PENDING' }
+  });
+
+  const totalReimbursementsPaid = await prisma.welfareReimbursement.count({
+    where: { status: 'PAID' }
+  });
+
+  const outstandingBalance = await prisma.welfareReimbursement.aggregate({
+    _sum: { amountDue: true },
+    where: { status: 'PENDING' }
+  });
+
+  const recentReimbursements = await prisma.welfareReimbursement.findMany({
+    take: 10,
+    orderBy: { updatedAt: 'desc' },
+    include: {
+      user: {
+        select: {
+          email: true,
+          firstName: true,
+          lastName: true,
+          username: true
+        }
+      },
+      application: {
+        select: {
+          deceasedName: true,
+          applicationType: true
+        }
+      }
+    }
+  });
 
   // Get recent registrations
   const recentRegistrations = await prisma.welfareRegistration.findMany({
@@ -183,8 +221,14 @@ export default async function WelfareDashboard() {
               <DollarSign className="h-8 w-8 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Fund</p>
-              <p className="text-2xl font-semibold text-gray-900">${totalFundAmount.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-500">Total Fund (Net)</p>
+              <p className="text-2xl font-semibold text-gray-900">${totalFundAmount.toFixed(2)}</p>
+              {welfareFund && (
+                <div className="mt-1 text-xs text-gray-500 space-y-0.5">
+                  <p>Gross: ${welfareFund.totalGrossAmount.toFixed(2)}</p>
+                  <p>Fees: ${welfareFund.totalStripeFees.toFixed(2)}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -232,6 +276,68 @@ export default async function WelfareDashboard() {
             </div>
             <CheckCircle className="h-8 w-8 text-green-400" />
           </div>
+        </div>
+      </div>
+
+      {/* Reimbursement Tracking */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-900">Reimbursement Tracking</h3>
+            <LoadingLink href="/welfare/reimbursements" className="text-blue-600 hover:text-blue-800 text-sm transition-colors">
+              View All
+            </LoadingLink>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-orange-700">Pending</p>
+              <p className="text-2xl font-semibold text-orange-900">{totalReimbursementsDue}</p>
+              <p className="text-sm text-orange-600 mt-1">
+                AUD ${(outstandingBalance._sum.amountDue || 0).toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-green-700">Paid</p>
+              <p className="text-2xl font-semibold text-green-900">{totalReimbursementsPaid}</p>
+            </div>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-blue-700">Collection Rate</p>
+              <p className="text-2xl font-semibold text-blue-900">
+                {totalReimbursementsDue + totalReimbursementsPaid > 0
+                  ? ((totalReimbursementsPaid / (totalReimbursementsDue + totalReimbursementsPaid)) * 100).toFixed(1)
+                  : '0'}%
+              </p>
+            </div>
+          </div>
+          {recentReimbursements.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Recent Activity</h4>
+              {recentReimbursements.slice(0, 5).map((reimb) => (
+                <div key={reimb.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {reimb.user?.firstName && reimb.user?.lastName
+                        ? `${reimb.user.firstName} ${reimb.user.lastName}`
+                        : reimb.user?.username || reimb.user?.email}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {reimb.application.deceasedName} • AUD ${reimb.amountDue.toFixed(2)}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    reimb.status === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {reimb.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          {recentReimbursements.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-4">No reimbursements yet</p>
+          )}
         </div>
       </div>
 

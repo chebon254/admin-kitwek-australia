@@ -79,11 +79,9 @@ export default function MembersPage() {
     }
   }, []);
 
-  // Poll for status updates
+  // Fetch status on mount (no polling needed - campaigns complete immediately)
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 10000);
-    return () => clearInterval(interval);
   }, [fetchStatus]);
 
   const handleBulkEmailInactive = async () => {

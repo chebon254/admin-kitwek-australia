@@ -335,11 +335,14 @@ model WelfareReimbursement {
   userId          String
   user            User               @relation(fields: [userId], references: [id])
   applicationId   String             // Reference to the claim that triggered reimbursement
-  application     WelfareApplication @relation(fields: [applicationId], references: [id]) // Add this relation
-  amountDue       Float
-  amountPaid      Float              @default(0)
+  application     WelfareApplication @relation(fields: [applicationId], references: [id])
+  amountDue       Float              // Amount user owes
+  amountPaid      Float              @default(0) // Gross amount paid by user
+  stripeFee       Float              @default(0) // Stripe fee for this transaction
+  netAmount       Float              @default(0) // Net amount added to fund
   dueDate         DateTime
   status          String             @default("PENDING") // PENDING, PAID, OVERDUE
+  stripePaymentId String?            // Link to Stripe payment
   paidAt          DateTime?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
@@ -347,20 +350,25 @@ model WelfareReimbursement {
   @@index([userId])
   @@index([status])
   @@index([dueDate])
-  @@index([applicationId]) // Add this index
+  @@index([applicationId])
 }
 
 model WelfareFund {
-  id              String    @id @default(uuid())
-  totalAmount     Float     @default(0)
-  totalMembers    Int       @default(0)
-  activeMembers   Int       @default(0)
-  lastUpdated     DateTime  @default(now())
-  isOperational   Boolean   @default(false) // True when 100+ members
-  launchDate      DateTime?
-  waitingPeriodEnd DateTime? // 2 months after launch
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                     String    @id @default(uuid())
+  totalAmount            Float     @default(0)    // Net amount after fees
+  totalGrossAmount       Float     @default(0)    // Total collected before fees
+  totalStripeFees        Float     @default(0)    // Total fees paid to Stripe
+  totalRegistrationFees  Float     @default(0)    // Net from registrations
+  totalReimbursementPaid Float     @default(0)    // Gross reimbursement payments
+  totalReimbursementFees Float     @default(0)    // Fees from reimbursements
+  totalMembers           Int       @default(0)
+  activeMembers          Int       @default(0)
+  lastUpdated            DateTime  @default(now())
+  isOperational          Boolean   @default(false) // True when 100+ members
+  launchDate             DateTime?
+  waitingPeriodEnd       DateTime? // 2 months after launch
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 }
 
 model ImmediateFamily {

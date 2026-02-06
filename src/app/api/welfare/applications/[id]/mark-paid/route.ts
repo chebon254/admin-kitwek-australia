@@ -93,9 +93,27 @@ export async function POST(
       });
 
       console.log(`Created ${reimbursements.count} reimbursement records`);
-      
-      return { 
-        updatedApplication, 
+
+      // Deduct payout amount from welfare fund balance
+      const welfareStats = await tx.welfareFund.findFirst({
+        orderBy: { createdAt: 'desc' }
+      });
+
+      if (welfareStats) {
+        await tx.welfareFund.update({
+          where: { id: welfareStats.id },
+          data: {
+            totalAmount: { decrement: application.claimAmount },
+            lastUpdated: new Date(),
+          }
+        });
+        console.log(`Deducted ${application.claimAmount} from welfare fund balance`);
+      } else {
+        console.warn('No welfare fund record found to deduct from');
+      }
+
+      return {
+        updatedApplication,
         reimbursements: { count: reimbursements.count, data: reimbursementData }
       };
     });

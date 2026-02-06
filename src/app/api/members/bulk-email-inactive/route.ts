@@ -1,6 +1,8 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendBatchActivationEmails } from "@/lib/zeptomail";
+import path from "path";
 
 // GET: Return count of inactive users and campaign status
 export async function GET(request: Request) {
@@ -198,7 +200,36 @@ export async function POST() {
         subject: 'Complete Your Kitwek Victoria Membership Activation',
         totalRecipients: recipients.length,
         recipients: JSON.stringify(recipients),
+        status: 'IN_PROGRESS',
         adminId: userId,
+      },
+    });
+
+    // Send emails immediately via ZeptoMail
+    const activationLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/membership`;
+    const pdfPath = path.join(process.cwd(), "public/files/Kitwek Victoria - Strengthening the Kalenjin Community.pdf");
+
+    const emailResults = await sendBatchActivationEmails(
+      recipients.map(r => ({
+        email: r.email,
+        firstName: r.firstName,
+        lastName: r.lastName
+      })),
+      activationLink,
+      pdfPath
+    );
+
+    // Update campaign with results
+    await prisma.emailCampaign.update({
+      where: { id: campaign.id },
+      data: {
+        status: 'COMPLETED',
+        sentCount: emailResults.sent,
+        failedCount: emailResults.failed,
+        failedEmails: emailResults.failed > 0
+          ? JSON.stringify(emailResults.results.filter(r => !r.sent))
+          : null,
+        completedAt: new Date(),
       },
     });
 
@@ -207,7 +238,7 @@ export async function POST() {
       data: {
         adminId: userId,
         action: "BULK_EMAIL_INACTIVE_USERS",
-        details: `Created activation reminder campaign for ${recipients.length} inactive users. Emails will be sent in batches of 50 every 20 minutes.`,
+        details: `Sent activation reminders to ${emailResults.sent} inactive users via ZeptoMail. Failed: ${emailResults.failed}.`,
       },
     });
 
@@ -215,7 +246,9 @@ export async function POST() {
       success: true,
       campaignId: campaign.id,
       totalRecipients: recipients.length,
-      message: `Campaign created. ${recipients.length} emails will be sent in batches of 50 every 20 minutes.`,
+      sent: emailResults.sent,
+      failed: emailResults.failed,
+      message: `Campaign completed. ${emailResults.sent} emails sent successfully, ${emailResults.failed} failed.`,
     });
   } catch (error) {
     console.error("[BULK_EMAIL_INACTIVE_POST]", error);

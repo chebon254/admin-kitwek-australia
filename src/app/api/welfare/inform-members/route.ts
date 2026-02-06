@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendBatchWelfareEmails } from "@/lib/zeptomail";
 
 // GET: Return count of active welfare members (for confirmation) or campaign status
 export async function GET(request: Request) {
@@ -165,7 +166,33 @@ export async function POST(request: Request) {
         htmlMessage,
         totalRecipients: recipients.length,
         recipients: JSON.stringify(recipients),
+        status: 'IN_PROGRESS',
         adminId: userId,
+      },
+    });
+
+    // Send emails immediately via ZeptoMail
+    const emailResults = await sendBatchWelfareEmails(
+      recipients.map(r => ({
+        email: r.email,
+        firstName: r.firstName,
+        lastName: r.lastName
+      })),
+      subject,
+      htmlMessage
+    );
+
+    // Update campaign with results
+    await prisma.emailCampaign.update({
+      where: { id: campaign.id },
+      data: {
+        status: 'COMPLETED',
+        sentCount: emailResults.sent,
+        failedCount: emailResults.failed,
+        failedEmails: emailResults.failed > 0
+          ? JSON.stringify(emailResults.results.filter(r => !r.sent))
+          : null,
+        completedAt: new Date(),
       },
     });
 
@@ -174,7 +201,7 @@ export async function POST(request: Request) {
       data: {
         adminId: userId,
         action: "WELFARE_INFORM_MEMBERS_CAMPAIGN",
-        details: `Created welfare notification campaign "${subject}" for ${recipients.length} members. Emails will be sent in batches of 50 every 20 minutes.`,
+        details: `Sent welfare notification "${subject}" to ${emailResults.sent} members via ZeptoMail. Failed: ${emailResults.failed}.`,
       },
     });
 
@@ -182,7 +209,9 @@ export async function POST(request: Request) {
       success: true,
       campaignId: campaign.id,
       totalRecipients: recipients.length,
-      message: `Campaign created. ${recipients.length} emails will be sent in batches of 50 every 20 minutes.`,
+      sent: emailResults.sent,
+      failed: emailResults.failed,
+      message: `Campaign completed. ${emailResults.sent} emails sent successfully, ${emailResults.failed} failed.`,
     });
   } catch (error) {
     console.error("[WELFARE_INFORM_MEMBERS_POST]", error);
