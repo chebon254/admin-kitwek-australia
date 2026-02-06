@@ -45,7 +45,7 @@ export default function RootLayout({
             sizes="180x180"
             href="/favicon/apple-touch-icon.png"
           />
-          <meta name="apple-mobile-web-app-title" content="Kitwek Australia" />
+          <meta name="apple-mobile-web-app-title" content="Kitwek Victoria" />
           <link rel="manifest" href="/favicon/site.webmanifest" />
         </head>
         <body className={`${ubuntu.variable} ${lora.variable} w-full`}>

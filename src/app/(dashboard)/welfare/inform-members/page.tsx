@@ -210,7 +210,7 @@ export default function InformMembersPage() {
             value={message}
             onChange={e => setMessage(e.target.value)}
             rows={12}
-            placeholder={`It is with deep sorrow that we inform you of the passing of our beloved member, [Name].\n\n[Name] was a valued member of our Kitwek Australia community and will be greatly missed by all who knew them.\n\nAs per our welfare fund guidelines, we will be processing the welfare claim to support the family during this difficult time. Each active member will be required to contribute the agreed welfare amount.\n\nPlease keep the family in your thoughts and prayers during this time.`}
+            placeholder={`It is with deep sorrow that we inform you of the passing of our beloved member, [Name].\n\n[Name] was a valued member of our Kitwek Victoria community and will be greatly missed by all who knew them.\n\nAs per our welfare fund guidelines, we will be processing the welfare claim to support the family during this difficult time. Each active member will be required to contribute the agreed welfare amount.\n\nPlease keep the family in your thoughts and prayers during this time.`}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono text-sm"
             disabled={!!activeCampaign}
           />
@@ -237,7 +237,7 @@ export default function InformMembersPage() {
             <div className="p-6 bg-white">
               <div style={{ maxWidth: 600, margin: "0 auto", fontFamily: "Arial, sans-serif", lineHeight: 1.6 }}>
                 <div style={{ textAlign: "center", paddingBottom: 16, borderBottom: "2px solid #f0f0f0" }}>
-                  <h2 style={{ color: "#333", margin: 0 }}>Kitwek Australia</h2>
+                  <h2 style={{ color: "#333", margin: 0 }}>Kitwek Victoria</h2>
                   <p style={{ color: "#666" }}>Welfare Notification</p>
                 </div>
                 <div style={{ padding: "16px 0" }}>

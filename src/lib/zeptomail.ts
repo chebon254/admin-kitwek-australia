@@ -113,10 +113,14 @@ function buildActivationEmailHtml(firstName: string, lastName: string, activatio
           <p style="margin: 5px 0 0 0; font-size: 14px;">We've attached our organization's constitution document for your review.</p>
         </div>
         <p>Best regards,<br>Kitwek Victoria Welfare Committee</p>
+        <div style="background-color: #f9fafb; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; font-size: 14px;"><strong>Need help?</strong></p>
+          <p style="margin: 5px 0 0 0; font-size: 14px;">Contact us at <a href="mailto:welfare@kitwekvictoria.org" style="color: #3b82f6; text-decoration: none;">welfare@kitwekvictoria.org</a></p>
+        </div>
       </div>
       <div class="footer">
         <p>This email was sent by Kitwek Victoria</p>
-        <p>&copy; ${new Date().getFullYear()} Kitwek Australia. All rights reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} Kitwek Victoria. All rights reserved.</p>
       </div>
     </div>
   </body>
@@ -144,17 +148,21 @@ function buildWelfareEmailHtml(firstName: string, subject: string, htmlMessage: 
   <body>
     <div class="container">
       <div class="header">
-        <h1 style="color: #333333; margin: 0;">Kitwek Australia</h1>
+        <h1 style="color: #333333; margin: 0;">Kitwek Victoria</h1>
         <p style="color: #666666;">Welfare Notification</p>
       </div>
       <div class="content">
         <p>Dear ${firstName || 'Member'},</p>
         ${htmlMessage}
         <p>Kind regards,<br>Kitwek Victoria Welfare Committee</p>
+        <div style="background-color: #f9fafb; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; font-size: 14px;"><strong>Need help?</strong></p>
+          <p style="margin: 5px 0 0 0; font-size: 14px;">Contact us at <a href="mailto:welfare@kitwekvictoria.org" style="color: #3b82f6; text-decoration: none;">welfare@kitwekvictoria.org</a></p>
+        </div>
       </div>
       <div class="footer">
         <p>This email was sent by Kitwek Victoria Welfare Committee</p>
-        <p>&copy; ${new Date().getFullYear()} Kitwek Australia. All rights reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} Kitwek Victoria. All rights reserved.</p>
       </div>
     </div>
   </body>
