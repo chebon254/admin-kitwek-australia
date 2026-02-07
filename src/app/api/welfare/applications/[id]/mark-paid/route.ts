@@ -94,7 +94,7 @@ export async function POST(
       const newMembers = activeMembers.filter(member => !existingUserIds.has(member.userId));
       console.log(`Creating reimbursements for ${newMembers.length} new members`);
 
-      let reimbursements = { count: 0 };
+      let reimbursementCount = 0;
       if (newMembers.length > 0) {
         const reimbursementData = newMembers.map(member => ({
           userId: member.userId,
@@ -104,12 +104,13 @@ export async function POST(
           status: 'PENDING'
         }));
 
-        reimbursements = await tx.welfareReimbursement.createMany({
+        const reimbursements = await tx.welfareReimbursement.createMany({
           data: reimbursementData
         });
+        reimbursementCount = reimbursements.count;
       }
 
-      console.log(`Created ${reimbursements.count} new reimbursement records`);
+      console.log(`Created ${reimbursementCount} new reimbursement records`);
 
       // Deduct payout amount from welfare fund balance
       const welfareStats = await tx.welfareFund.findFirst({
@@ -131,7 +132,7 @@ export async function POST(
 
       return {
         updatedApplication,
-        reimbursements: { count: reimbursements.count, data: reimbursementData }
+        reimbursementCount
       };
     });
 
@@ -143,7 +144,7 @@ export async function POST(
         data: {
           adminId: userId,
           action: "MARK_WELFARE_PAID",
-          details: `Marked welfare application as paid: ${application.deceasedName} - ${application.claimAmount}. Created ${result.reimbursements.count} reimbursement records.`,
+          details: `Marked welfare application as paid: ${application.deceasedName} - ${application.claimAmount}. Created ${result.reimbursementCount} reimbursement records.`,
         },
       });
       console.log("Admin log created successfully");
