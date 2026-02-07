@@ -40,33 +40,12 @@ export async function POST(
       return NextResponse.json({ error: "Application must be approved first" }, { status: 400 });
     }
 
-    console.log("Starting transaction to update application and create reimbursements");
+    console.log("Starting transaction to update application");
 
-    // First, get all active welfare members outside the transaction
-    console.log("Fetching active welfare members");
-    const activeMembers = await prisma.welfareRegistration.findMany({
-      where: {
-        status: 'ACTIVE',
-        paymentStatus: 'PAID'
-      },
-      include: { user: true }
-    });
-
-    console.log(`Found ${activeMembers.length} active members`);
-
-    if (activeMembers.length === 0) {
-      console.warn("No active welfare members found");
-      return NextResponse.json({ error: "No active welfare members found" }, { status: 400 });
-    }
-
-    // Fixed reimbursement amount per member (AUD $19)
-    const reimbursementPerMember = 19.00;
-    console.log(`Reimbursement per member: AUD $${reimbursementPerMember}`);
-
-    // Update application and create reimbursement records in a transaction
+    // Update application status (reimbursements will be created separately by admin)
     const result = await prisma.$transaction(async (tx) => {
       console.log("Updating application status to PAID");
-      
+
       // Update application status
       const updatedApplication = await tx.welfareApplication.update({
         where: { id: applicationId },
@@ -77,40 +56,7 @@ export async function POST(
         }
       });
 
-      console.log("Creating reimbursement records");
-
-      // Check for existing reimbursements to avoid duplicates
-      const existingReimbursements = await tx.welfareReimbursement.findMany({
-        where: {
-          applicationId: applicationId
-        },
-        select: { userId: true }
-      });
-
-      const existingUserIds = new Set(existingReimbursements.map(r => r.userId));
-      console.log(`Found ${existingUserIds.size} existing reimbursements for this application`);
-
-      // Only create reimbursements for members who don't already have one
-      const newMembers = activeMembers.filter(member => !existingUserIds.has(member.userId));
-      console.log(`Creating reimbursements for ${newMembers.length} new members`);
-
-      let reimbursementCount = 0;
-      if (newMembers.length > 0) {
-        const reimbursementData = newMembers.map(member => ({
-          userId: member.userId,
-          applicationId: applicationId,
-          amountDue: reimbursementPerMember,
-          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
-          status: 'PENDING'
-        }));
-
-        const reimbursements = await tx.welfareReimbursement.createMany({
-          data: reimbursementData
-        });
-        reimbursementCount = reimbursements.count;
-      }
-
-      console.log(`Created ${reimbursementCount} new reimbursement records`);
+      console.log("Application marked as PAID - reimbursements will be created manually by admin");
 
       // Deduct payout amount from welfare fund balance
       const welfareStats = await tx.welfareFund.findFirst({
@@ -130,10 +76,7 @@ export async function POST(
         console.warn('No welfare fund record found to deduct from');
       }
 
-      return {
-        updatedApplication,
-        reimbursementCount
-      };
+      return updatedApplication;
     });
 
     console.log("Transaction completed successfully");
@@ -144,7 +87,7 @@ export async function POST(
         data: {
           adminId: userId,
           action: "MARK_WELFARE_PAID",
-          details: `Marked welfare application as paid: ${application.deceasedName} - ${application.claimAmount}. Created ${result.reimbursementCount} reimbursement records.`,
+          details: `Marked welfare application as paid: ${application.deceasedName} - AUD $${application.claimAmount}. Reimbursements to be created by admin.`,
         },
       });
       console.log("Admin log created successfully");
@@ -153,11 +96,8 @@ export async function POST(
       // Don't throw here, as the main operation succeeded
     }
 
-    // TODO: Send payout confirmation email to applicant
-    // TODO: Send reimbursement notification emails to all active members
-
     console.log("Mark-paid operation completed successfully");
-    return NextResponse.json(result.updatedApplication);
+    return NextResponse.json(result);
   } catch (error) {
     // Simplified error handling to avoid Next.js source map issues
     console.error("[WELFARE_APPLICATION_MARK_PAID] Error occurred:", error);

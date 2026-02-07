@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { LoadingLink } from "@/components/ui/LoadingLink";
+import { CreateReimbursementButton } from "@/components/welfare/CreateReimbursementButton";
 import {
   Shield,
   Users,
@@ -281,8 +282,9 @@ export default async function WelfareDashboard() {
 
       {/* Reimbursement Tracking */}
       <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h3 className="text-lg font-medium text-gray-900">Reimbursement Tracking</h3>
+          <CreateReimbursementButton />
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
