@@ -59,9 +59,9 @@ export async function POST(
       return NextResponse.json({ error: "No active welfare members found" }, { status: 400 });
     }
 
-    // Calculate reimbursement amount per member
-    const reimbursementPerMember = Number((application.claimAmount / activeMembers.length).toFixed(2));
-    console.log(`Reimbursement per member: ${reimbursementPerMember}`);
+    // Fixed reimbursement amount per member (AUD $19)
+    const reimbursementPerMember = 19.00;
+    console.log(`Reimbursement per member: AUD $${reimbursementPerMember}`);
 
     // Update application and create reimbursement records in a transaction
     const result = await prisma.$transaction(async (tx) => {
