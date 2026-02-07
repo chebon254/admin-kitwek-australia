@@ -274,6 +274,8 @@ model WelfareRegistration {
 
   @@index([userId])
   @@index([status])
+  @@index([paymentStatus])
+  @@index([status, paymentStatus])
 }
 
 model WelfareApplication {

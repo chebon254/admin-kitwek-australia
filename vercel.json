@@ -1,4 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "crons": []
+  "crons": [],
+  "functions": {
+    "app/(dashboard)/welfare/page.tsx": {
+      "maxDuration": 30
+    },
+    "app/api/welfare/**": {
+      "maxDuration": 30
+    }
+  }
 }
