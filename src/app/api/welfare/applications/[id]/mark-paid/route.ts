@@ -9,7 +9,7 @@ export async function POST(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const applicationId = (await params).id;
@@ -18,7 +18,7 @@ export async function POST(
     // Get the application
     const application = await prisma.welfareApplication.findUnique({
       where: { id: applicationId },
-      include: { 
+      include: {
         user: {
           select: {
             id: true,
@@ -32,12 +32,12 @@ export async function POST(
 
     if (!application) {
       console.log("Application not found:", applicationId);
-      return new NextResponse("Application not found", { status: 404 });
+      return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
     if (application.status !== 'APPROVED') {
       console.log("Application status is not APPROVED:", application.status);
-      return new NextResponse("Application must be approved first", { status: 400 });
+      return NextResponse.json({ error: "Application must be approved first" }, { status: 400 });
     }
 
     console.log("Starting transaction to update application and create reimbursements");
@@ -56,7 +56,7 @@ export async function POST(
 
     if (activeMembers.length === 0) {
       console.warn("No active welfare members found");
-      return new NextResponse("No active welfare members found", { status: 400 });
+      return NextResponse.json({ error: "No active welfare members found" }, { status: 400 });
     }
 
     // Calculate reimbursement amount per member
@@ -78,21 +78,38 @@ export async function POST(
       });
 
       console.log("Creating reimbursement records");
-      
-      // Create reimbursement records using createMany for better performance
-      const reimbursementData = activeMembers.map(member => ({
-        userId: member.userId,
-        applicationId: applicationId,
-        amountDue: reimbursementPerMember,
-        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
-        status: 'PENDING'
-      }));
 
-      const reimbursements = await tx.welfareReimbursement.createMany({
-        data: reimbursementData
+      // Check for existing reimbursements to avoid duplicates
+      const existingReimbursements = await tx.welfareReimbursement.findMany({
+        where: {
+          applicationId: applicationId
+        },
+        select: { userId: true }
       });
 
-      console.log(`Created ${reimbursements.count} reimbursement records`);
+      const existingUserIds = new Set(existingReimbursements.map(r => r.userId));
+      console.log(`Found ${existingUserIds.size} existing reimbursements for this application`);
+
+      // Only create reimbursements for members who don't already have one
+      const newMembers = activeMembers.filter(member => !existingUserIds.has(member.userId));
+      console.log(`Creating reimbursements for ${newMembers.length} new members`);
+
+      let reimbursements = { count: 0 };
+      if (newMembers.length > 0) {
+        const reimbursementData = newMembers.map(member => ({
+          userId: member.userId,
+          applicationId: applicationId,
+          amountDue: reimbursementPerMember,
+          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+          status: 'PENDING'
+        }));
+
+        reimbursements = await tx.welfareReimbursement.createMany({
+          data: reimbursementData
+        });
+      }
+
+      console.log(`Created ${reimbursements.count} new reimbursement records`);
 
       // Deduct payout amount from welfare fund balance
       const welfareStats = await tx.welfareFund.findFirst({
@@ -142,18 +159,23 @@ export async function POST(
     return NextResponse.json(result.updatedApplication);
   } catch (error) {
     // Simplified error handling to avoid Next.js source map issues
-    console.error("[WELFARE_APPLICATION_MARK_PAID] Error occurred:", String(error));
-    
+    console.error("[WELFARE_APPLICATION_MARK_PAID] Error occurred:", error);
+
     // Return more specific error messages based on common issues
     if (error instanceof Error) {
+      console.error("[WELFARE_APPLICATION_MARK_PAID] Error message:", error.message);
+      console.error("[WELFARE_APPLICATION_MARK_PAID] Error stack:", error.stack);
+
       if (error.message.includes('foreign key constraint')) {
-        return new NextResponse("Database constraint error - please check user relationships", { status: 400 });
+        return NextResponse.json({ error: "Database constraint error - please check user relationships" }, { status: 400 });
       }
       if (error.message.includes('Unique constraint')) {
-        return new NextResponse("Duplicate reimbursement record detected", { status: 400 });
+        return NextResponse.json({ error: "Duplicate reimbursement record detected" }, { status: 400 });
       }
+
+      return NextResponse.json({ error: "Internal Error", details: error.message }, { status: 500 });
     }
-    
-    return new NextResponse("Internal Error", { status: 500 });
+
+    return NextResponse.json({ error: "Internal Error", details: String(error) }, { status: 500 });
   }
 }
