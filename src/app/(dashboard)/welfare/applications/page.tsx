@@ -80,8 +80,12 @@ export default async function WelfareApplicationsPage(props: {
   const totalApplications = applications.length;
   const pendingCount = applications.filter(a => a.status === 'PENDING').length;
   const approvedCount = applications.filter(a => a.status === 'APPROVED').length;
+  const paidCount = applications.filter(a => a.status === 'PAID').length;
   const totalClaimAmount = applications
-    .filter(a => a.status === 'APPROVED')
+    .filter(a => a.status === 'APPROVED' || a.status === 'PAID')
+    .reduce((sum, a) => sum + a.claimAmount, 0);
+  const totalPaidAmount = applications
+    .filter(a => a.status === 'PAID')
     .reduce((sum, a) => sum + a.claimAmount, 0);
 
   const getStatusBadge = (status: string) => {
@@ -162,6 +166,11 @@ export default async function WelfareApplicationsPage(props: {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Claims</p>
               <p className="text-2xl font-semibold text-gray-900">${totalClaimAmount.toLocaleString()}</p>
+              {totalPaidAmount > 0 && (
+                <p className="text-xs text-blue-600 mt-1">
+                  ${totalPaidAmount.toLocaleString()} paid out ({paidCount} claims)
+                </p>
+              )}
             </div>
           </div>
         </div>

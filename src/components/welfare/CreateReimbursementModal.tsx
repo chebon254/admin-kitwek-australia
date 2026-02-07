@@ -234,33 +234,49 @@ export function CreateReimbursementModal({ isOpen, onClose, onSuccess }: CreateR
               </div>
 
               {/* Amount Input */}
-              {selectedApp && (
+              {selectedApp && selectedApplication && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Amount Per Member (AUD) *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <DollarSign className="h-5 w-5 text-gray-400" />
+                  {selectedApplication.needsReimbursements ? (
+                    <>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Amount Per Member (AUD) *
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <DollarSign className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="19.00"
+                          required
+                        />
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500 text-sm">AUD</span>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-sm text-gray-600">
+                        Total to collect: AUD ${(parseFloat(amount) * (selectedApplication.activeMembers - selectedApplication.totalReimbursements)).toFixed(2)} from {selectedApplication.activeMembers - selectedApplication.totalReimbursements} remaining members
+                      </p>
+                    </>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="text-sm font-medium text-green-900">
+                            All Reimbursements Created
+                          </p>
+                          <p className="text-xs text-green-700 mt-1">
+                            This application already has reimbursements for all {selectedApplication.activeMembers} active members.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="19.00"
-                      required
-                    />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500 text-sm">AUD</span>
-                    </div>
-                  </div>
-                  {selectedApplication && (
-                    <p className="mt-2 text-sm text-gray-600">
-                      Total to collect: AUD ${(parseFloat(amount) * selectedApplication.activeMembers).toFixed(2)} from {selectedApplication.activeMembers} members
-                    </p>
                   )}
                 </div>
               )}
@@ -280,7 +296,7 @@ export function CreateReimbursementModal({ isOpen, onClose, onSuccess }: CreateR
           <button
             type="submit"
             onClick={handleSubmit}
-            disabled={!selectedApp || submitting || loading}
+            disabled={!selectedApp || submitting || loading || (selectedApplication && !selectedApplication.needsReimbursements)}
             className="px-4 py-2 bg-orange-600 text-white rounded-md text-sm font-medium hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {submitting ? (
