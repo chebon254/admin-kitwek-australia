@@ -87,7 +87,15 @@ export default async function WelfareDashboard() {
       application: {
         select: {
           deceasedName: true,
-          applicationType: true
+          applicationType: true,
+          user: {
+            select: {
+              email: true,
+              firstName: true,
+              lastName: true,
+              username: true
+            }
+          }
         }
       }
     }
@@ -320,7 +328,9 @@ export default async function WelfareDashboard() {
                         : reimb.user?.username || reimb.user?.email}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {reimb.application.deceasedName} • AUD ${reimb.amountDue.toFixed(2)}
+                      Applicant: {reimb.application.user?.firstName && reimb.application.user?.lastName
+                        ? `${reimb.application.user.firstName} ${reimb.application.user.lastName}`
+                        : reimb.application.user?.username || reimb.application.user?.email} • AUD ${reimb.amountDue.toFixed(2)}
                     </p>
                   </div>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${

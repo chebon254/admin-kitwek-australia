@@ -11,6 +11,12 @@ interface Application {
   payoutDate: string;
   reimbursementDue: string;
   applicationType: string;
+  applicant: {
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    username: string | null;
+  };
   totalReimbursements: number;
   pendingReimbursements: number;
   paidReimbursements: number;
@@ -180,7 +186,11 @@ export function CreateReimbursementModal({ isOpen, onClose, onSuccess }: CreateR
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium text-gray-900">{app.deceasedName}</h4>
+                              <h4 className="font-medium text-gray-900">
+                                Applicant: {app.applicant.firstName && app.applicant.lastName
+                                  ? `${app.applicant.firstName} ${app.applicant.lastName}`
+                                  : app.applicant.username || app.applicant.email}
+                              </h4>
                               {app.totalReimbursements > 0 && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
                                   {app.totalReimbursements} / {app.activeMembers} created

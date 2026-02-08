@@ -25,6 +25,14 @@ export async function GET() {
         payoutDate: true,
         reimbursementDue: true,
         applicationType: true,
+        user: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+            username: true
+          }
+        },
         reimbursements: {
           select: {
             id: true,
@@ -50,6 +58,12 @@ export async function GET() {
       payoutDate: app.payoutDate,
       reimbursementDue: app.reimbursementDue,
       applicationType: app.applicationType,
+      applicant: {
+        email: app.user.email,
+        firstName: app.user.firstName,
+        lastName: app.user.lastName,
+        username: app.user.username
+      },
       totalReimbursements: app.reimbursements.length,
       pendingReimbursements: app.reimbursements.filter(r => r.status === 'PENDING').length,
       paidReimbursements: app.reimbursements.filter(r => r.status === 'PAID').length,
