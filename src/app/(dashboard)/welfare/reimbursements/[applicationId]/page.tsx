@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   User,
   Mail,
-  Phone,
   Calendar,
   DollarSign
 } from "lucide-react";

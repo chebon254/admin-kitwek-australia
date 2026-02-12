@@ -7,7 +7,6 @@ import {
   DollarSign,
   Clock,
   CheckCircle,
-  Users,
   AlertTriangle
 } from "lucide-react";
 
