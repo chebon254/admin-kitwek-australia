@@ -1,33 +1,12 @@
 /**
  * ZeptoMail Service for Bulk Email Sending
  *
- * Replaces Zoho Mail SMTP with ZeptoMail API for immediate bulk email sending.
- * No rate limiting - designed for transactional and bulk emails.
+ * Uses ZeptoMail REST API for immediate bulk email sending.
+ * API Documentation: https://www.zoho.com/zeptomail/help/api/
  */
 
-// Type declaration for zeptomail package (lacks official TypeScript types)
-declare module "zeptomail" {
-  export class SendMailClient {
-    constructor(config: { url: string; token: string });
-    sendMail(options: {
-      from: { address: string; name: string };
-      to: Array<{ email_address: { address: string; name: string } }>;
-      subject: string;
-      htmlbody: string;
-      attachments?: Array<{ content: string; mime_type: string; name: string }>;
-    }): Promise<void>;
-  }
-}
-
-import { SendMailClient } from "zeptomail";
 import path from "path";
 import fs from "fs";
-
-// Initialize ZeptoMail client
-const client = new SendMailClient({
-  url: process.env.ZEPTOMAIL_URL || "api.zeptomail.com/",
-  token: process.env.ZEPTOMAIL_TOKEN || "",
-});
 
 interface EmailRecipient {
   email: string;
@@ -41,11 +20,6 @@ interface EmailResult {
   error?: string;
 }
 
-interface ZeptoMailAddress {
-  address: string;
-  name: string;
-}
-
 interface ZeptoMailRecipient {
   email_address: {
     address: string;
@@ -53,18 +27,49 @@ interface ZeptoMailRecipient {
   };
 }
 
-interface ZeptoMailAttachment {
-  content: string;
-  mime_type: string;
-  name: string;
-}
-
-interface ZeptoMailOptions {
-  from: ZeptoMailAddress;
+interface ZeptoMailRequest {
+  from: {
+    address: string;
+    name?: string;
+  };
   to: ZeptoMailRecipient[];
   subject: string;
   htmlbody: string;
-  attachments?: ZeptoMailAttachment[];
+  attachments?: Array<{
+    content: string;
+    mime_type: string;
+    name: string;
+  }>;
+}
+
+/**
+ * Send email via ZeptoMail API
+ */
+async function sendZeptoMail(mailOptions: ZeptoMailRequest): Promise<void> {
+  const apiUrl = process.env.ZEPTOMAIL_URL || "https://api.zeptomail.com.au/v1.1/email";
+  const apiToken = process.env.ZEPTOMAIL_TOKEN || "";
+
+  if (!apiToken || apiToken === "your_send_mail_token_here") {
+    throw new Error("ZeptoMail token not configured");
+  }
+
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "Authorization": apiToken, // Already includes "Zoho-enczapikey" prefix
+    },
+    body: JSON.stringify(mailOptions),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`ZeptoMail API error: ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+  console.log("ZeptoMail response:", result);
 }
 
 /**
@@ -171,7 +176,7 @@ function buildWelfareEmailHtml(firstName: string, subject: string, htmlMessage: 
 
 /**
  * Send batch activation emails to inactive users
- * Sends all emails immediately via ZeptoMail API
+ * Sends all emails via ZeptoMail API
  */
 export async function sendBatchActivationEmails(
   recipients: EmailRecipient[],
@@ -189,7 +194,7 @@ export async function sendBatchActivationEmails(
     pdfContent = pdfBuffer.toString('base64');
   }
 
-  // Send emails one by one (ZeptoMail handles rate limiting)
+  // Send emails one by one
   for (const recipient of recipients) {
     try {
       const htmlContent = buildActivationEmailHtml(
@@ -198,9 +203,9 @@ export async function sendBatchActivationEmails(
         activationLink
       );
 
-      const mailOptions: ZeptoMailOptions = {
+      const mailOptions: ZeptoMailRequest = {
         from: {
-          address: process.env.SMTP_USER || "noreply@kitwekvictoria.org",
+          address: "noreply@kitwekvictoria.org",
           name: "Kitwek Victoria"
         },
         to: [
@@ -226,7 +231,7 @@ export async function sendBatchActivationEmails(
         ];
       }
 
-      await client.sendMail(mailOptions);
+      await sendZeptoMail(mailOptions);
       results.push({ sent: true, email: recipient.email });
       sent++;
     } catch (error) {
@@ -246,7 +251,7 @@ export async function sendBatchActivationEmails(
 
 /**
  * Send batch welfare notification emails
- * Sends all emails immediately via ZeptoMail API
+ * Sends all emails via ZeptoMail API
  */
 export async function sendBatchWelfareEmails(
   recipients: EmailRecipient[],
@@ -257,7 +262,7 @@ export async function sendBatchWelfareEmails(
   let sent = 0;
   let failed = 0;
 
-  // Send emails one by one (ZeptoMail handles rate limiting)
+  // Send emails one by one
   for (const recipient of recipients) {
     try {
       const htmlContent = buildWelfareEmailHtml(
@@ -266,10 +271,10 @@ export async function sendBatchWelfareEmails(
         htmlMessage
       );
 
-      await client.sendMail({
+      const mailOptions: ZeptoMailRequest = {
         from: {
-          address: process.env.SMTP_USER || "noreply@kitwekvictoria.org",
-          name: "Kitwek Victoria"
+          address: "noreply@kitwekvictoria.org",
+          name: "Kitwek Victoria Welfare Committee"
         },
         to: [
           {
@@ -281,8 +286,9 @@ export async function sendBatchWelfareEmails(
         ],
         subject: subject,
         htmlbody: htmlContent,
-      });
+      };
 
+      await sendZeptoMail(mailOptions);
       results.push({ sent: true, email: recipient.email });
       sent++;
     } catch (error) {

@@ -156,6 +156,13 @@ export default async function WelfareDashboard() {
             <span>View Applications</span>
           </LoadingLink>
           <LoadingLink
+            href="/welfare/reimbursements"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all duration-200 hover:shadow-md inline-flex items-center gap-2"
+          >
+            <DollarSign className="w-4 h-4" />
+            <span>Track Reimbursements</span>
+          </LoadingLink>
+          <LoadingLink
             href="/welfare/inform-members"
             className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-all duration-200 hover:shadow-md inline-flex items-center gap-2"
           >
