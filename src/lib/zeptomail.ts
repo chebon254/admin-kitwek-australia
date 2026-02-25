@@ -7,6 +7,7 @@
 
 import path from "path";
 import fs from "fs";
+import { sendSmsIfPossible } from "@/lib/sms";
 
 interface EmailRecipient {
   email: string;
@@ -232,6 +233,14 @@ export async function sendBatchActivationEmails(
       }
 
       await sendZeptoMail(mailOptions);
+      try {
+        await sendSmsIfPossible({
+          email: recipient.email,
+          message: "Kitwek Victoria: Membership activation reminder sent. Please check your email for the activation link.",
+        });
+      } catch (smsError) {
+        console.error(`Failed to send SMS to ${recipient.email}:`, smsError);
+      }
       results.push({ sent: true, email: recipient.email });
       sent++;
     } catch (error) {
@@ -289,6 +298,14 @@ export async function sendBatchWelfareEmails(
       };
 
       await sendZeptoMail(mailOptions);
+      try {
+        await sendSmsIfPossible({
+          email: recipient.email,
+          message: `Kitwek Victoria Welfare: ${subject}`,
+        });
+      } catch (smsError) {
+        console.error(`Failed to send SMS to ${recipient.email}:`, smsError);
+      }
       results.push({ sent: true, email: recipient.email });
       sent++;
     } catch (error) {

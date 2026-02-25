@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from 'nodemailer';
 import { prisma } from "@/lib/prisma";
+import { sendSmsIfPossible } from "@/lib/sms";
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -120,6 +121,17 @@ export async function POST(
         </html>
       `,
     });
+
+    try {
+      await sendSmsIfPossible({
+        email: user.email,
+        phone: user.phone ?? undefined,
+        message:
+          "Kitwek Victoria: Membership activation email resent. Please check your inbox and complete activation in your dashboard.",
+      });
+    } catch (smsError) {
+      console.error("[MEMBER_RESEND_ACTIVATION_SMS]", smsError);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

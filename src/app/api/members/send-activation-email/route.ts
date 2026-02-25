@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 import nodemailer from 'nodemailer';
 import path from 'path';
+import { sendSmsIfPossible } from "@/lib/sms";
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { email, firstName, lastName, userId: targetUserId } = body;
+    const { email, firstName, lastName, phone, userId: targetUserId } = body;
 
     if (!email || !targetUserId) {
       return NextResponse.json(
@@ -147,6 +148,17 @@ export async function POST(request: Request) {
         </html>
       `,
       });
+
+      try {
+        await sendSmsIfPossible({
+          email,
+          phone,
+          message:
+            "Kitwek Victoria: Membership activation reminder sent. Check your email and complete activation from your dashboard.",
+        });
+      } catch (smsError) {
+        console.error("[SMS_SEND_ERROR]", smsError);
+      }
     } catch (emailError) {
       console.error("[EMAIL_SEND_ERROR]", emailError);
       return NextResponse.json(
