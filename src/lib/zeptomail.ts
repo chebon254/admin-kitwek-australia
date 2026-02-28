@@ -15,9 +15,21 @@ interface EmailRecipient {
   lastName?: string;
 }
 
+interface WelfareRecipient {
+  email?: string | null;
+  phone?: string | null;
+  firstName: string;
+  lastName?: string;
+}
+
 interface EmailResult {
   sent: boolean;
   email: string;
+  phone?: string;
+  channels?: {
+    email: boolean;
+    sms: boolean;
+  };
   error?: string;
 }
 
@@ -263,62 +275,105 @@ export async function sendBatchActivationEmails(
  * Sends all emails via ZeptoMail API
  */
 export async function sendBatchWelfareEmails(
-  recipients: EmailRecipient[],
+  recipients: WelfareRecipient[],
   subject: string,
   htmlMessage: string
-): Promise<{ sent: number; failed: number; results: EmailResult[] }> {
+): Promise<{ sent: number; failed: number; emailSent: number; smsSent: number; results: EmailResult[] }> {
   const results: EmailResult[] = [];
   let sent = 0;
   let failed = 0;
+  let emailSent = 0;
+  let smsSent = 0;
 
-  // Send emails one by one
+  // Attempt each channel independently for every recipient.
   for (const recipient of recipients) {
-    try {
-      const htmlContent = buildWelfareEmailHtml(
-        recipient.firstName,
-        subject,
-        htmlMessage
-      );
+    const trimmedEmail = recipient.email?.trim() || "";
+    const trimmedPhone = recipient.phone?.trim() || "";
+    const displayTarget = trimmedEmail || trimmedPhone || "unknown-recipient";
 
-      const mailOptions: ZeptoMailRequest = {
-        from: {
-          address: "noreply@kitwekvictoria.org",
-          name: "Kitwek Victoria Welfare Committee"
-        },
-        to: [
-          {
-            email_address: {
-              address: recipient.email,
-              name: `${recipient.firstName} ${recipient.lastName || ''}`.trim()
+    const channelErrors: string[] = [];
+    let emailOk = false;
+    let smsOk = false;
+
+    if (trimmedEmail) {
+      try {
+        const htmlContent = buildWelfareEmailHtml(
+          recipient.firstName,
+          subject,
+          htmlMessage
+        );
+
+        const mailOptions: ZeptoMailRequest = {
+          from: {
+            address: "noreply@kitwekvictoria.org",
+            name: "Kitwek Victoria Welfare Committee"
+          },
+          to: [
+            {
+              email_address: {
+                address: trimmedEmail,
+                name: `${recipient.firstName} ${recipient.lastName || ''}`.trim()
+              }
             }
-          }
-        ],
-        subject: subject,
-        htmlbody: htmlContent,
-      };
+          ],
+          subject: subject,
+          htmlbody: htmlContent,
+        };
 
-      await sendZeptoMail(mailOptions);
+        await sendZeptoMail(mailOptions);
+        emailOk = true;
+        emailSent++;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error(`Failed to send welfare email to ${displayTarget}:`, errorMessage);
+        channelErrors.push(`email: ${errorMessage}`);
+      }
+    }
+
+    if (trimmedPhone) {
       try {
         await sendSmsIfPossible({
-          email: recipient.email,
+          email: trimmedEmail || undefined,
+          phone: trimmedPhone,
           message: `Kitwek Victoria Welfare: ${subject}`,
         });
+        smsOk = true;
+        smsSent++;
       } catch (smsError) {
-        console.error(`Failed to send SMS to ${recipient.email}:`, smsError);
+        const errorMessage = smsError instanceof Error ? smsError.message : "Unknown error";
+        console.error(`Failed to send welfare SMS to ${displayTarget}:`, errorMessage);
+        channelErrors.push(`sms: ${errorMessage}`);
       }
-      results.push({ sent: true, email: recipient.email });
-      sent++;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`Failed to send email to ${recipient.email}:`, errorMessage);
+    }
+
+    const hasAnyChannel = Boolean(trimmedEmail || trimmedPhone);
+    const reached = emailOk || smsOk;
+
+    if (!hasAnyChannel) {
+      failed++;
       results.push({
         sent: false,
-        email: recipient.email,
-        error: errorMessage
+        email: displayTarget,
+        error: "No email or phone number available",
+        channels: { email: false, sms: false },
       });
+      continue;
+    }
+
+    if (reached) {
+      sent++;
+    } else {
       failed++;
     }
+
+    results.push({
+      sent: reached,
+      email: displayTarget,
+      phone: trimmedPhone || undefined,
+      channels: { email: emailOk, sms: smsOk },
+      error: reached ? undefined : (channelErrors.join("; ") || "Delivery failed"),
+    });
   }
 
-  return { sent, failed, results };
+  return { sent, failed, emailSent, smsSent, results };
 }

@@ -147,7 +147,7 @@ export default function InformMembersPage() {
         </a>
         <div>
           <h1 className="text-2xl font-bold">Inform Welfare Members</h1>
-          <p className="text-gray-600 mt-1">Send email notifications to all active welfare members</p>
+          <p className="text-gray-600 mt-1">Send email and SMS notifications to all active welfare members</p>
         </div>
       </div>
 
@@ -174,9 +174,7 @@ export default function InformMembersPage() {
             {activeCampaign.failedCount > 0 && (
               <span className="text-red-700">{activeCampaign.failedCount} failed</span>
             )}
-            <span className="text-blue-700">
-              ~{Math.ceil((activeCampaign.totalRecipients - activeCampaign.sentCount - activeCampaign.failedCount) / 50) * 20} min remaining
-            </span>
+            <span className="text-blue-700">Processing notifications...</span>
           </div>
         </div>
       )}
@@ -203,7 +201,7 @@ export default function InformMembersPage() {
             Message
           </label>
           <p className="text-xs text-gray-500 mb-2">
-            Write your message in plain text. Separate paragraphs with a blank line. Each paragraph will be formatted as a separate block in the email. Emails are sent in batches of 50 every 20 minutes to comply with email provider limits.
+            Write your message in plain text. Separate paragraphs with a blank line. Each paragraph will be formatted as a separate block in the email. Members with a phone number also receive an SMS summary.
           </p>
           <textarea
             id="message"
@@ -340,7 +338,7 @@ export default function InformMembersPage() {
                   <div>
                     <h3 className="text-sm font-medium text-blue-800">Batch Sending</h3>
                     <p className="mt-1 text-sm text-blue-700">
-                      Emails will be sent in batches of 50 every 20 minutes to comply with email provider rate limits. Estimated time: ~{Math.ceil(recipientCount / 50) * 20} minutes.
+                      Notifications are sent immediately. Email and SMS are attempted independently based on each member&apos;s available contact details.
                     </p>
                   </div>
                 </div>
@@ -363,13 +361,14 @@ export default function InformMembersPage() {
                 <div className="ml-7 text-sm text-gray-600 space-y-1">
                   <p><span className="font-medium">Subject:</span> {subject}</p>
                   <p><span className="font-medium">Message:</span> {message.length > 100 ? message.substring(0, 100) + "..." : message}</p>
+                  <p><span className="font-medium">Channels:</span> Email + SMS (when phone exists)</p>
                 </div>
               </div>
 
               <p className="text-sm text-gray-700">
-                Create this campaign to send emails to{" "}
+                Create this campaign to send notifications to{" "}
                 <span className="font-semibold text-gray-900">{recipientCount}</span>{" "}
-                active welfare members? You can close this page — emails will continue sending in the background.
+                active welfare members? Members with email receive email, members with phone receive SMS, and members with both receive both.
               </p>
             </div>
             <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
@@ -430,7 +429,7 @@ export default function InformMembersPage() {
                 <div className="border border-red-200 rounded-lg p-4 bg-red-50">
                   <div className="flex items-center gap-2 mb-3">
                     <AlertCircle className="h-5 w-5 text-red-600" />
-                    <h3 className="font-medium text-red-900">Failed Emails ({showCampaignDetails.failedEmails.length})</h3>
+                    <h3 className="font-medium text-red-900">Failed Deliveries ({showCampaignDetails.failedEmails.length})</h3>
                   </div>
                   <div className="max-h-60 overflow-y-auto space-y-2">
                     {showCampaignDetails.failedEmails.map((item, index) => (

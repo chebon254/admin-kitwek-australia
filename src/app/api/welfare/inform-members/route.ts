@@ -44,12 +44,14 @@ export async function GET(request: Request) {
       },
       include: {
         user: {
-          select: { email: true }
+          select: { email: true, phone: true }
         }
       }
     });
 
-    const total = activeMembers.filter(m => m.user?.email).length;
+    const total = activeMembers.filter(
+      m => Boolean(m.user?.email?.trim() || m.user?.phone?.trim())
+    ).length;
 
     // Also return any active campaigns
     const activeCampaigns = await prisma.emailCampaign.findMany({
@@ -138,6 +140,7 @@ export async function POST(request: Request) {
           select: {
             id: true,
             email: true,
+            phone: true,
             firstName: true,
             lastName: true,
           }
@@ -146,9 +149,10 @@ export async function POST(request: Request) {
     });
 
     const recipients = activeMembers
-      .filter(m => m.user?.email)
+      .filter(m => Boolean(m.user?.email?.trim() || m.user?.phone?.trim()))
       .map(m => ({
-        email: m.user!.email!,
+        email: m.user!.email || null,
+        phone: m.user!.phone || null,
         firstName: m.user!.firstName || '',
         lastName: m.user!.lastName || '',
         sent: false,
@@ -171,10 +175,11 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send emails immediately via ZeptoMail
-    const emailResults = await sendBatchWelfareEmails(
+    // Send notifications immediately (email + SMS when available)
+    const notificationResults = await sendBatchWelfareEmails(
       recipients.map(r => ({
         email: r.email,
+        phone: r.phone,
         firstName: r.firstName,
         lastName: r.lastName
       })),
@@ -187,10 +192,10 @@ export async function POST(request: Request) {
       where: { id: campaign.id },
       data: {
         status: 'COMPLETED',
-        sentCount: emailResults.sent,
-        failedCount: emailResults.failed,
-        failedEmails: emailResults.failed > 0
-          ? JSON.stringify(emailResults.results.filter(r => !r.sent))
+        sentCount: notificationResults.sent,
+        failedCount: notificationResults.failed,
+        failedEmails: notificationResults.failed > 0
+          ? JSON.stringify(notificationResults.results.filter(r => !r.sent))
           : null,
         completedAt: new Date(),
       },
@@ -201,7 +206,7 @@ export async function POST(request: Request) {
       data: {
         adminId: userId,
         action: "WELFARE_INFORM_MEMBERS_CAMPAIGN",
-        details: `Sent welfare notification "${subject}" to ${emailResults.sent} members via ZeptoMail. Failed: ${emailResults.failed}.`,
+        details: `Sent welfare notification "${subject}" to ${notificationResults.sent} members (email: ${notificationResults.emailSent}, sms: ${notificationResults.smsSent}). Failed: ${notificationResults.failed}.`,
       },
     });
 
@@ -209,9 +214,11 @@ export async function POST(request: Request) {
       success: true,
       campaignId: campaign.id,
       totalRecipients: recipients.length,
-      sent: emailResults.sent,
-      failed: emailResults.failed,
-      message: `Campaign completed. ${emailResults.sent} emails sent successfully, ${emailResults.failed} failed.`,
+      sent: notificationResults.sent,
+      failed: notificationResults.failed,
+      emailSent: notificationResults.emailSent,
+      smsSent: notificationResults.smsSent,
+      message: `Campaign completed. ${notificationResults.sent} members notified successfully (${notificationResults.emailSent} emails, ${notificationResults.smsSent} SMS), ${notificationResults.failed} failed.`,
     });
   } catch (error) {
     console.error("[WELFARE_INFORM_MEMBERS_POST]", error);
