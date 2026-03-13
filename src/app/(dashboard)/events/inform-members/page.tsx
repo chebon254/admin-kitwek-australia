@@ -35,6 +35,7 @@ interface Campaign {
 export default function EventInformMembersPage() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [signature, setSignature] = useState("Kind regards,\nKitwek Victoria");
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -97,6 +98,7 @@ export default function EventInformMembersPage() {
         body: JSON.stringify({
           subject: subject.trim(),
           htmlMessage,
+          signature: signature.trim(),
         }),
       });
 
@@ -111,6 +113,7 @@ export default function EventInformMembersPage() {
       toast.success(data.message);
       setSubject("");
       setMessage("");
+      setSignature("Kind regards,\nKitwek Victoria");
       setLoading(false);
 
       await fetchStatus();
@@ -212,6 +215,23 @@ export default function EventInformMembersPage() {
           />
         </div>
 
+        <div>
+          <label htmlFor="signature" className="block text-sm font-medium text-gray-700 mb-1">
+            Sender Signature
+          </label>
+          <p className="text-xs text-gray-500 mb-2">
+            This appears at the end of the email. Each line is rendered separately.
+          </p>
+          <textarea
+            id="signature"
+            value={signature}
+            onChange={e => setSignature(e.target.value)}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+            disabled={!!activeCampaign}
+          />
+        </div>
+
         {/* Preview Toggle */}
         <div>
           <button
@@ -243,7 +263,11 @@ export default function EventInformMembersPage() {
                   ) : (
                     <p style={{ color: "#999", fontStyle: "italic" }}>Your message will appear here...</p>
                   )}
-                  <p style={{ color: "#333" }}>Kind regards,<br />Kitwek Victoria Events Committee</p>
+                  <p style={{ color: "#333" }}>
+                    {signature.split("\n").map((line, i) => (
+                      <span key={i}>{line}{i < signature.split("\n").length - 1 && <br />}</span>
+                    ))}
+                  </p>
                 </div>
                 <div style={{ textAlign: "center", paddingTop: 16, borderTop: "2px solid #f0f0f0", color: "#666", fontSize: 12 }}>
                   <p>This email was sent by Kitwek Victoria</p>
@@ -257,7 +281,7 @@ export default function EventInformMembersPage() {
         <div className="flex justify-end">
           <button
             onClick={handleSendClick}
-            disabled={loading || !!activeCampaign || !subject.trim() || !message.trim()}
+            disabled={loading || !!activeCampaign || !subject.trim() || !message.trim() || !signature.trim()}
             className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (

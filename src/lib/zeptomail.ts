@@ -273,7 +273,13 @@ export async function sendBatchActivationEmails(
 /**
  * Build HTML template for event notification email
  */
-function buildEventEmailHtml(firstName: string, subject: string, htmlMessage: string): string {
+function buildEventEmailHtml(firstName: string, subject: string, htmlMessage: string, signature: string): string {
+  const signatureHtml = signature
+    .split(/\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .map(line => `<span>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>`)
+    .join('<br>');
   return `<!DOCTYPE html>
 <html>
   <head>
@@ -292,12 +298,12 @@ function buildEventEmailHtml(firstName: string, subject: string, htmlMessage: st
     <div class="container">
       <div class="header">
         <h1 style="color: #333333; margin: 0;">Kitwek Victoria</h1>
-        <p style="color: #666666;">Events &amp; Community Notice</p>
+        <p style="color: #666666;">Community Notice</p>
       </div>
       <div class="content">
         <p>Dear ${firstName || 'Member'},</p>
         ${htmlMessage}
-        <p>Kind regards,<br>Kitwek Victoria Events Committee</p>
+        <p>${signatureHtml}</p>
         <div style="background-color: #f9fafb; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 4px;">
           <p style="margin: 0; font-size: 14px;"><strong>Need help?</strong></p>
           <p style="margin: 5px 0 0 0; font-size: 14px;">Contact us at <a href="mailto:info@kitwekvictoria.org" style="color: #2563eb; text-decoration: none;">info@kitwekvictoria.org</a></p>
@@ -326,7 +332,8 @@ interface EventRecipient {
 export async function sendBatchEventEmails(
   recipients: EventRecipient[],
   subject: string,
-  htmlMessage: string
+  htmlMessage: string,
+  signature: string
 ): Promise<{ sent: number; failed: number; emailSent: number; smsSent: number; results: EmailResult[] }> {
   const results: EmailResult[] = [];
   let sent = 0;
@@ -348,7 +355,8 @@ export async function sendBatchEventEmails(
         const htmlContent = buildEventEmailHtml(
           recipient.firstName,
           subject,
-          htmlMessage
+          htmlMessage,
+          signature
         );
 
         const mailOptions: ZeptoMailRequest = {

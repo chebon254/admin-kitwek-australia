@@ -102,7 +102,7 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { subject, htmlMessage } = await request.json();
+    const { subject, htmlMessage, signature } = await request.json();
 
     if (!subject || !htmlMessage) {
       return NextResponse.json({ error: "Missing subject or message" }, { status: 400 });
@@ -173,7 +173,8 @@ export async function POST(request: Request) {
         lastName: r.lastName,
       })),
       subject,
-      htmlMessage
+      htmlMessage,
+      signature || 'Kind regards,\nKitwek Victoria'
     );
 
     // Update campaign with results
