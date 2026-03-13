@@ -271,6 +271,162 @@ export async function sendBatchActivationEmails(
 }
 
 /**
+ * Build HTML template for event notification email
+ */
+function buildEventEmailHtml(firstName: string, subject: string, htmlMessage: string): string {
+  return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${subject}</title>
+    <style>
+      body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
+      .container { max-width: 600px; margin: 20px auto; padding: 20px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+      .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #f0f0f0; }
+      .content { padding: 20px 0; }
+      .footer { text-align: center; padding-top: 20px; border-top: 2px solid #f0f0f0; color: #666666; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 style="color: #333333; margin: 0;">Kitwek Victoria</h1>
+        <p style="color: #666666;">Events &amp; Community Notice</p>
+      </div>
+      <div class="content">
+        <p>Dear ${firstName || 'Member'},</p>
+        ${htmlMessage}
+        <p>Kind regards,<br>Kitwek Victoria Events Committee</p>
+        <div style="background-color: #f9fafb; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; font-size: 14px;"><strong>Need help?</strong></p>
+          <p style="margin: 5px 0 0 0; font-size: 14px;">Contact us at <a href="mailto:info@kitwekvictoria.org" style="color: #2563eb; text-decoration: none;">info@kitwekvictoria.org</a></p>
+        </div>
+      </div>
+      <div class="footer">
+        <p>This email was sent by Kitwek Victoria</p>
+        <p>&copy; ${new Date().getFullYear()} Kitwek Victoria. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>`;
+}
+
+interface EventRecipient {
+  email?: string | null;
+  phone?: string | null;
+  firstName: string;
+  lastName?: string;
+}
+
+/**
+ * Send batch event notification emails to registered users
+ * Sends all emails via ZeptoMail API
+ */
+export async function sendBatchEventEmails(
+  recipients: EventRecipient[],
+  subject: string,
+  htmlMessage: string
+): Promise<{ sent: number; failed: number; emailSent: number; smsSent: number; results: EmailResult[] }> {
+  const results: EmailResult[] = [];
+  let sent = 0;
+  let failed = 0;
+  let emailSent = 0;
+  let smsSent = 0;
+
+  for (const recipient of recipients) {
+    const trimmedEmail = recipient.email?.trim() || "";
+    const trimmedPhone = recipient.phone?.trim() || "";
+    const displayTarget = trimmedEmail || trimmedPhone || "unknown-recipient";
+
+    const channelErrors: string[] = [];
+    let emailOk = false;
+    let smsOk = false;
+
+    if (trimmedEmail) {
+      try {
+        const htmlContent = buildEventEmailHtml(
+          recipient.firstName,
+          subject,
+          htmlMessage
+        );
+
+        const mailOptions: ZeptoMailRequest = {
+          from: {
+            address: "noreply@kitwekvictoria.org",
+            name: "Kitwek Victoria"
+          },
+          to: [
+            {
+              email_address: {
+                address: trimmedEmail,
+                name: `${recipient.firstName} ${recipient.lastName || ''}`.trim()
+              }
+            }
+          ],
+          subject: subject,
+          htmlbody: htmlContent,
+        };
+
+        await sendZeptoMail(mailOptions);
+        emailOk = true;
+        emailSent++;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error(`Failed to send event email to ${displayTarget}:`, errorMessage);
+        channelErrors.push(`email: ${errorMessage}`);
+      }
+    }
+
+    if (trimmedPhone) {
+      try {
+        await sendSmsIfPossible({
+          email: trimmedEmail || undefined,
+          phone: trimmedPhone,
+          message: `Kitwek Victoria: ${subject}`,
+        });
+        smsOk = true;
+        smsSent++;
+      } catch (smsError) {
+        const errorMessage = smsError instanceof Error ? smsError.message : "Unknown error";
+        console.error(`Failed to send event SMS to ${displayTarget}:`, errorMessage);
+        channelErrors.push(`sms: ${errorMessage}`);
+      }
+    }
+
+    const hasAnyChannel = Boolean(trimmedEmail || trimmedPhone);
+    const reached = emailOk || smsOk;
+
+    if (!hasAnyChannel) {
+      failed++;
+      results.push({
+        sent: false,
+        email: displayTarget,
+        error: "No email or phone number available",
+        channels: { email: false, sms: false },
+      });
+      continue;
+    }
+
+    if (reached) {
+      sent++;
+    } else {
+      failed++;
+    }
+
+    results.push({
+      sent: reached,
+      email: displayTarget,
+      phone: trimmedPhone || undefined,
+      channels: { email: emailOk, sms: smsOk },
+      error: reached ? undefined : (channelErrors.join("; ") || "Delivery failed"),
+    });
+  }
+
+  return { sent, failed, emailSent, smsSent, results };
+}
+
+/**
  * Send batch welfare notification emails
  * Sends all emails via ZeptoMail API
  */

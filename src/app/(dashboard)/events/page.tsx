@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { LoadingLink } from "@/components/ui/LoadingLink";
 import { EventsList } from "@/components/events/EventsList";
+import { Mail } from "lucide-react";
 
 export default async function EventsPage() {
   const { userId } = await auth();
@@ -31,12 +32,21 @@ export default async function EventsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Events Management</h1>
-        <LoadingLink
-          href="/events/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-md inline-flex items-center gap-2"
-        >
-          <span>Create New Event</span>
-        </LoadingLink>
+        <div className="flex items-center gap-3">
+          <LoadingLink
+            href="/events/inform-members"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 hover:shadow-md inline-flex items-center gap-2"
+          >
+            <Mail className="h-4 w-4" />
+            <span>Email Members</span>
+          </LoadingLink>
+          <LoadingLink
+            href="/events/new"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:shadow-md inline-flex items-center gap-2"
+          >
+            <span>Create New Event</span>
+          </LoadingLink>
+        </div>
       </div>
 
       <EventsList events={events} />
